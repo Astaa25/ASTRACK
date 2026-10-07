@@ -4,8 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 
 void main() {
-  const supabaseUrl = 'https://dcwdjpjgxtagaozvkesr.supabase.co';
-  const anonKey = 'sb_publishable_O7pwSVJsGL2U2kQv6VkYog_bzEaunT1';
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
+  const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+  final isConfigured = supabaseUrl.isNotEmpty && anonKey.isNotEmpty;
 
   final headers = {
     'apikey': anonKey,
@@ -14,10 +15,11 @@ void main() {
     'Prefer': 'return=representation',
   };
 
-  const bool enableLiveProbe = bool.fromEnvironment('LIVE_PROBE', defaultValue: true);
-
   group(
     'ASTRACK Supabase Cloud Live Runtime Probe',
+    skip: !isConfigured
+        ? 'Live probe skipped: SUPABASE_URL and SUPABASE_ANON_KEY not set via --dart-define'
+        : null,
     () {
       test('1. Supabase Cloud Connection & Plans Query (LIVE RUNTIME)', () async {
       final res = await http.get(
@@ -509,5 +511,5 @@ void main() {
       expect(auditData.isEmpty, isTrue, reason: 'Failed transaction must not insert orphaned redemption record');
       print('LIVE CLOUD: Zero orphaned redemption records created on aborted transaction.');
     });
-  }, skip: enableLiveProbe ? false : 'Skipped via --dart-define=LIVE_PROBE=false');
+  });
 }

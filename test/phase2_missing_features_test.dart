@@ -113,7 +113,7 @@ void main() {
       // Find Crash Reporting toggle switch
       final switchTile = find.byType(SwitchListTile);
       expect(switchTile, findsOneWidget);
-      expect(find.text('Laporan Galat Sistem (Crash Reporting)'), findsOneWidget);
+      expect(find.text('Laporan Galat Sistem (Crash Reporting) [PARTIAL]'), findsOneWidget);
 
       // Initially false
       final prefs = await SharedPreferences.getInstance();

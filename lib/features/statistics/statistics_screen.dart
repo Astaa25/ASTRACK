@@ -131,7 +131,8 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     }
     final cats = catMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final mData = _monthlyData(finance.transactions);
-    final maxY = mData.isEmpty ? 1000000.0 : mData.map((m) => m.income > m.expense ? m.income : m.expense).reduce((a, b) => a > b ? a : b);
+    final rawMax = mData.isEmpty ? 1000000.0 : mData.map((m) => m.income > m.expense ? m.income : m.expense).reduce((a, b) => a > b ? a : b);
+    final maxY = rawMax <= 0 ? 1000000.0 : rawMax;
 
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
     final cardColor = isDark ? AppColors.darkCard : Colors.white;
@@ -803,7 +804,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
-                    horizontalInterval: maxY / 4,
+                    horizontalInterval: (maxY / 4) <= 0 ? 250000.0 : (maxY / 4),
                     getDrawingHorizontalLine: (_) => FlLine(
                       color: border.withAlpha(80),
                       strokeWidth: 1,

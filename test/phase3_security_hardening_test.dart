@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:astrack/core/services/security_service.dart';
@@ -12,6 +13,7 @@ void main() {
   group('ASTRACK Phase 3: Security Hardening & Integer Money Audit Tests', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
     });
 
     test('1. PBKDF2-HMAC-SHA256 Derivation: Deterministic 64-hex key with 10,000 iterations', () {
@@ -47,24 +49,29 @@ void main() {
       expect(RegExp(r'^[0-9a-f]{32}$').hasMatch(salt), isTrue);
     });
 
-    test('4. Automatic Migration: Legacy single-pass SHA-256 hash auto-upgrades to PBKDF2 with dynamic salt', () async {
+    test('4. Automatic Migration: Legacy single-pass SHA-256 hash auto-upgrades to PBKDF2 >=100k in FlutterSecureStorage', () async {
       final prefs = await SharedPreferences.getInstance();
       final security = SecurityService.instance;
 
-      // Manually store legacy hash without salt key
+      // Manually store legacy hash in unencrypted SharedPreferences
       await prefs.setString('astrack_user_pin_hash', '5d41402abc4b2a76b9719d911017c592'); // mock legacy hash
       await prefs.setBool('astrack_pin_enabled', true);
       await prefs.remove('astrack_user_pin_salt');
 
       await security.init();
+      // Verifies legacy was wiped from unencrypted prefs and loaded into secure cache
+      expect(prefs.getString('astrack_user_pin_hash'), isNull);
       expect(security.currentSalt, isNull);
 
-      // Set a fresh PIN to verify V2 salt is persisted
+      // Set a fresh PIN to verify 100,000 PBKDF2 iterations in FlutterSecureStorage
       await security.setPin('999111');
       expect(security.currentSalt, isNotNull);
-      expect(prefs.getString('astrack_user_pin_salt'), isNotNull);
+      expect(await security.secureStorage.read(key: 'astrack_user_pin_salt'), isNotNull);
+      expect(await security.secureStorage.read(key: 'astrack_pin_iterations'), equals('100000'));
+      expect(security.currentIterations, equals(100000));
+      expect(security.lastDerivationLatencyMs, greaterThanOrEqualTo(0));
 
-      // Verify PIN works with PBKDF2
+      // Verify PIN works with PBKDF2 100k
       expect(await security.verifyPin('999111'), isTrue);
       expect(await security.verifyPin('000000'), isFalse);
     });

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,6 +74,7 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
     storage = StorageService();
     await storage.init();
     themeProvider = ThemeProvider(storage);
@@ -213,9 +215,10 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       // Plaintext key MUST be wiped completely
       expect(prefs.getString('astrack_user_pin'), isNull);
+      // Hash is stored in FlutterSecureStorage, NOT unencrypted SharedPreferences
+      expect(prefs.getString('astrack_user_pin_hash'), isNull);
 
-      // Hash key must exist and not match plaintext
-      final hash = prefs.getString('astrack_user_pin_hash');
+      final hash = await sec.secureStorage.read(key: 'astrack_user_pin_hash');
       expect(hash, isNotNull);
       expect(hash, isNot(equals('654321')));
       expect(hash!.length, equals(64)); // SHA-256 is 64 hex chars

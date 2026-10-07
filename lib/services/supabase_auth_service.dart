@@ -61,7 +61,10 @@ class SupabaseAuthService {
   static Future<void> sendPasswordResetEmail(String email) async {
     final client = _supabase;
     if (client == null) throw Exception('Supabase client is uninitialized.');
-    await client.auth.resetPasswordForEmail(email.trim());
+    await client.auth.resetPasswordForEmail(
+      email.trim(),
+      redirectTo: 'io.supabase.astrack://reset-callback',
+    );
   }
 
   /// Update password for the currently signed-in user

@@ -297,11 +297,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: isDark ? AppColors.darkCard : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          'Reset Data Contoh?',
+          'Bersihkan Seluruh Data Finansial?',
           style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
         ),
         content: Text(
-          'Seluruh transaksi dan saldo akan dikembalikan ke data awal percontohan.',
+          'Tindakan ini akan menghapus seluruh catatan transaksi, pagu anggaran, target tabungan, dan mengosongkan saldo dompet Anda.',
           style: TextStyle(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
         ),
         actions: [
@@ -309,13 +309,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.expense, foregroundColor: Colors.white),
             onPressed: () {
-              finance.resetToSampleData();
+              finance.clearAllFinancialData();
               Navigator.of(ctx).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('✓ Data berhasil di-reset ke sample percontohan!')),
+                const SnackBar(content: Text('✓ Seluruh data finansial telah dibersihkan.')),
               );
             },
-            child: const Text('Reset'),
+            child: const Text('Bersihkan'),
           ),
         ],
       ),
@@ -642,9 +642,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.refresh_rounded, color: AppColors.expense),
-                    title: const Text('Reset Data ke Contoh Awal', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.expense)),
-                    subtitle: Text('Kembalikan rekening & transaksi ke percontohan awal', style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkMuted : AppColors.lightTextSecondary)),
+                    leading: const Icon(Icons.delete_sweep_rounded, color: AppColors.expense),
+                    title: const Text('Bersihkan Seluruh Data Finansial', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.expense)),
+                    subtitle: Text('Hapus seluruh transaksi, anggaran, dan target tabungan', style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkMuted : AppColors.lightTextSecondary)),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => _showResetConfirmDialog(context),
                   ),

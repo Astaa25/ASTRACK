@@ -1,8 +1,25 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class Pbkdf2Params {
+  final String pin;
+  final String saltHex;
+  final int iterations;
+  const Pbkdf2Params(this.pin, this.saltHex, this.iterations);
+}
+
+String _pbkdf2IsolateWorker(Pbkdf2Params params) {
+  return SecurityService.derivePbkdf2Key(
+    pin: params.pin,
+    saltHex: params.saltHex,
+    iterations: params.iterations,
+  );
+}
 
 class SecurityService with WidgetsBindingObserver {
   static final SecurityService _instance = SecurityService._internal();
@@ -11,33 +28,54 @@ class SecurityService with WidgetsBindingObserver {
 
   SecurityService._internal();
 
-  // Storage keys (Plaintext PIN removed permanently)
+  // Storage keys in FlutterSecureStorage
   static const String _keyPinHash = 'astrack_user_pin_hash';
   static const String _keyPinSalt = 'astrack_user_pin_salt';
-  static const String _keyLegacyPin = 'astrack_user_pin'; // for migration only
-  static const String _keyPinEnabled = 'astrack_pin_enabled';
-  static const String _keyBiometricEnabled = 'astrack_biometric_enabled';
+  static const String _keyPinIterations = 'astrack_pin_iterations';
   static const String _keyFailedAttempts = 'astrack_pin_failed_attempts';
   static const String _keyLockoutUntil = 'astrack_pin_lockout_until';
+  static const String _keyPinEnabled = 'astrack_pin_enabled';
+  static const String _keyBiometricEnabled = 'astrack_biometric_enabled';
 
-  // Secret Salt retained strictly for legacy migration
+  // Legacy SharedPreferences key for plaintext pin migration
+  static const String _keyLegacyPin = 'astrack_user_pin';
+
+  // Secret Salt retained strictly for legacy SHA-256 migration
   static const String _legacyPinSalt = 'ASTRACK_SECURE_SALT_v1_98a7c2f5';
-  static const int pbkdf2Iterations = 10000;
+
+  /// Standard PBKDF2 iterations hardened to 100,000 rounds
+  static const int pbkdf2Iterations = 100000;
 
   final ValueNotifier<bool> isLockedNotifier = ValueNotifier<bool>(false);
 
+  FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
   String? _cachedPinHash;
   String? _cachedPinSalt;
+  int? _cachedPinIterations;
   bool _pinEnabled = false;
   bool _biometricEnabled = false;
   int _failedAttempts = 0;
   DateTime? _lockoutUntil;
+  int _lastDerivationLatencyMs = 0;
 
   bool get isPinEnabled => _pinEnabled;
   bool get isBiometricEnabled => _biometricEnabled;
   bool get hasPin => _cachedPinHash != null && _cachedPinHash!.isNotEmpty;
   String? get currentSalt => _cachedPinSalt;
+  int? get currentIterations => _cachedPinIterations;
   int get failedAttempts => _failedAttempts;
+  int get lastDerivationLatencyMs => _lastDerivationLatencyMs;
+
+  @visibleForTesting
+  FlutterSecureStorage get secureStorage => _secureStorage;
+
+  @visibleForTesting
+  void setSecureStorageForTesting(FlutterSecureStorage storage) {
+    _secureStorage = storage;
+  }
 
   bool get isLockedOut {
     if (_lockoutUntil == null) return false;
@@ -53,28 +91,83 @@ class SecurityService with WidgetsBindingObserver {
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Secure Migration: Clean up plaintext PIN if it exists
-    final legacyPin = prefs.getString(_keyLegacyPin);
-    if (legacyPin != null && legacyPin.isNotEmpty) {
+    // 1. Transparent migration from legacy unencrypted SharedPreferences to FlutterSecureStorage
+    final legacyPlainPin = prefs.getString(_keyLegacyPin);
+    if (legacyPlainPin != null && legacyPlainPin.isNotEmpty) {
       final salt = generateSecureSalt();
-      final hashed = derivePbkdf2Key(pin: legacyPin, saltHex: salt);
-      await prefs.setString(_keyPinHash, hashed);
-      await prefs.setString(_keyPinSalt, salt);
-      await prefs.remove(_keyLegacyPin); // Wipe plaintext
+      final sw = Stopwatch()..start();
+      final hashed = await compute(
+        _pbkdf2IsolateWorker,
+        Pbkdf2Params(legacyPlainPin, salt, pbkdf2Iterations),
+      );
+      sw.stop();
+      _lastDerivationLatencyMs = sw.elapsedMilliseconds;
+
+      await _secureStorage.write(key: _keyPinHash, value: hashed);
+      await _secureStorage.write(key: _keyPinSalt, value: salt);
+      await _secureStorage.write(key: _keyPinIterations, value: pbkdf2Iterations.toString());
+      await prefs.remove(_keyLegacyPin);
     }
 
-    _cachedPinHash = prefs.getString(_keyPinHash);
-    _cachedPinSalt = prefs.getString(_keyPinSalt);
-    _pinEnabled = prefs.getBool(_keyPinEnabled) ?? false;
-    _biometricEnabled = prefs.getBool(_keyBiometricEnabled) ?? false;
-    _failedAttempts = prefs.getInt(_keyFailedAttempts) ?? 0;
+    final legacyPrefsHash = prefs.getString(_keyPinHash);
+    if (legacyPrefsHash != null && legacyPrefsHash.isNotEmpty) {
+      final legacySalt = prefs.getString(_keyPinSalt);
+      final legacyAttempts = prefs.getInt(_keyFailedAttempts) ?? 0;
+      final legacyLockout = prefs.getInt(_keyLockoutUntil);
 
-    final lockoutMs = prefs.getInt(_keyLockoutUntil);
-    if (lockoutMs != null) {
-      _lockoutUntil = DateTime.fromMillisecondsSinceEpoch(lockoutMs);
-      if (DateTime.now().isAfter(_lockoutUntil!)) {
-        _lockoutUntil = null;
-        await prefs.remove(_keyLockoutUntil);
+      await _secureStorage.write(key: _keyPinHash, value: legacyPrefsHash);
+      if (legacySalt != null) {
+        await _secureStorage.write(key: _keyPinSalt, value: legacySalt);
+        await _secureStorage.write(key: _keyPinIterations, value: '10000'); // marked as legacy 10k
+      }
+      await _secureStorage.write(key: _keyFailedAttempts, value: legacyAttempts.toString());
+      if (legacyLockout != null) {
+        await _secureStorage.write(key: _keyLockoutUntil, value: legacyLockout.toString());
+      }
+
+      // Wipe from unencrypted SharedPreferences
+      await prefs.remove(_keyPinHash);
+      await prefs.remove(_keyPinSalt);
+      await prefs.remove(_keyFailedAttempts);
+      await prefs.remove(_keyLockoutUntil);
+      await prefs.remove(_keyLegacyPin);
+    }
+
+    // 2. Load cached credentials from hardware-backed FlutterSecureStorage
+    _cachedPinHash = await _secureStorage.read(key: _keyPinHash);
+    _cachedPinSalt = await _secureStorage.read(key: _keyPinSalt);
+    final iterStr = await _secureStorage.read(key: _keyPinIterations);
+    _cachedPinIterations = iterStr != null ? int.tryParse(iterStr) : null;
+
+    final failedStr = await _secureStorage.read(key: _keyFailedAttempts);
+    _failedAttempts = failedStr != null ? (int.tryParse(failedStr) ?? 0) : 0;
+
+    final pinEnStr = await _secureStorage.read(key: _keyPinEnabled);
+    if (pinEnStr != null) {
+      _pinEnabled = pinEnStr == 'true';
+    } else {
+      _pinEnabled = prefs.getBool(_keyPinEnabled) ?? false;
+      if (_pinEnabled) {
+        await _secureStorage.write(key: _keyPinEnabled, value: 'true');
+      }
+    }
+
+    final bioEnStr = await _secureStorage.read(key: _keyBiometricEnabled);
+    if (bioEnStr != null) {
+      _biometricEnabled = bioEnStr == 'true';
+    } else {
+      _biometricEnabled = prefs.getBool(_keyBiometricEnabled) ?? false;
+    }
+
+    final lockoutStr = await _secureStorage.read(key: _keyLockoutUntil);
+    if (lockoutStr != null) {
+      final lockoutMs = int.tryParse(lockoutStr);
+      if (lockoutMs != null) {
+        _lockoutUntil = DateTime.fromMillisecondsSinceEpoch(lockoutMs);
+        if (DateTime.now().isAfter(_lockoutUntil!)) {
+          _lockoutUntil = null;
+          await _secureStorage.delete(key: _keyLockoutUntil);
+        }
       }
     }
 
@@ -99,7 +192,7 @@ class SecurityService with WidgetsBindingObserver {
     return _bytesToHex(bytes);
   }
 
-  /// Derive key using PBKDF2-HMAC-SHA256 with 10,000 iterations
+  /// Derive key using PBKDF2-HMAC-SHA256
   static String derivePbkdf2Key({
     required String pin,
     required String saltHex,
@@ -152,77 +245,139 @@ class SecurityService with WidgetsBindingObserver {
     return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
+  /// Sets a new 6-digit PIN securely using PBKDF2 with >= 100,000 iterations in an isolate
   Future<bool> setPin(String pin) async {
     if (pin.length != 6) return false;
-    final prefs = await SharedPreferences.getInstance();
 
     final salt = generateSecureSalt();
-    final hash = derivePbkdf2Key(pin: pin, saltHex: salt);
+    final sw = Stopwatch()..start();
+    final hash = await compute(
+      _pbkdf2IsolateWorker,
+      Pbkdf2Params(pin, salt, pbkdf2Iterations),
+    );
+    sw.stop();
+    _lastDerivationLatencyMs = sw.elapsedMilliseconds;
+    debugPrint('PBKDF2 ($pbkdf2Iterations iter) execution latency: ${_lastDerivationLatencyMs}ms');
 
-    await prefs.setString(_keyPinHash, hash);
-    await prefs.setString(_keyPinSalt, salt);
-    await prefs.setBool(_keyPinEnabled, true);
-    await prefs.remove(_keyLegacyPin); // Ensure plaintext is wiped
+    await _secureStorage.write(key: _keyPinHash, value: hash);
+    await _secureStorage.write(key: _keyPinSalt, value: salt);
+    await _secureStorage.write(key: _keyPinIterations, value: pbkdf2Iterations.toString());
+    await _secureStorage.write(key: _keyPinEnabled, value: 'true');
+    await _secureStorage.write(key: _keyFailedAttempts, value: '0');
+    await _secureStorage.delete(key: _keyLockoutUntil);
+
+    // Ensure plaintext and unencrypted keys are wiped from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyLegacyPin);
+    await prefs.remove(_keyPinHash);
+    await prefs.remove(_keyPinSalt);
+    await prefs.remove(_keyFailedAttempts);
+    await prefs.remove(_keyLockoutUntil);
 
     _cachedPinHash = hash;
     _cachedPinSalt = salt;
+    _cachedPinIterations = pbkdf2Iterations;
     _pinEnabled = true;
     _failedAttempts = 0;
-    await prefs.setInt(_keyFailedAttempts, 0);
+    _lockoutUntil = null;
 
     return true;
   }
 
+  /// Verifies PIN against stored hash with automatic migration to 100,000 iterations
   Future<bool> verifyPin(String inputPin) async {
     if (isLockedOut) {
       return false;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    _cachedPinHash ??= prefs.getString(_keyPinHash);
-    _cachedPinSalt ??= prefs.getString(_keyPinSalt);
+    _cachedPinHash ??= await _secureStorage.read(key: _keyPinHash);
+    _cachedPinSalt ??= await _secureStorage.read(key: _keyPinSalt);
+    final iterStr = await _secureStorage.read(key: _keyPinIterations);
+    _cachedPinIterations ??= iterStr != null ? int.tryParse(iterStr) : null;
 
     if (_cachedPinHash == null) return false;
 
     bool isValid = false;
 
     if (_cachedPinSalt != null) {
-      // V2 PBKDF2 Verification
-      final calculated = derivePbkdf2Key(pin: inputPin, saltHex: _cachedPinSalt!);
+      final iters = _cachedPinIterations ?? 10000;
+      final sw = Stopwatch()..start();
+      final calculated = await compute(
+        _pbkdf2IsolateWorker,
+        Pbkdf2Params(inputPin, _cachedPinSalt!, iters),
+      );
+      sw.stop();
+      _lastDerivationLatencyMs = sw.elapsedMilliseconds;
+
       isValid = _constantTimeEquals(_cachedPinHash!, calculated);
+
+      // Transparent upgrade to >= 100,000 iterations if verified with older round count
+      if (isValid && iters < pbkdf2Iterations) {
+        final newSalt = generateSecureSalt();
+        final upSw = Stopwatch()..start();
+        final newHash = await compute(
+          _pbkdf2IsolateWorker,
+          Pbkdf2Params(inputPin, newSalt, pbkdf2Iterations),
+        );
+        upSw.stop();
+        _lastDerivationLatencyMs = upSw.elapsedMilliseconds;
+
+        await _secureStorage.write(key: _keyPinHash, value: newHash);
+        await _secureStorage.write(key: _keyPinSalt, value: newSalt);
+        await _secureStorage.write(key: _keyPinIterations, value: pbkdf2Iterations.toString());
+        _cachedPinHash = newHash;
+        _cachedPinSalt = newSalt;
+        _cachedPinIterations = pbkdf2Iterations;
+        debugPrint('Seamlessly upgraded PIN hash from $iters to $pbkdf2Iterations PBKDF2 iterations in ${_lastDerivationLatencyMs}ms');
+      }
     } else {
       // Legacy V1 SHA-256 verification + transparent upgrade
       final legacyCalculated = _hashLegacyPin(inputPin);
       isValid = _constantTimeEquals(_cachedPinHash!, legacyCalculated);
       if (isValid) {
         final newSalt = generateSecureSalt();
-        final newHash = derivePbkdf2Key(pin: inputPin, saltHex: newSalt);
-        await prefs.setString(_keyPinHash, newHash);
-        await prefs.setString(_keyPinSalt, newSalt);
+        final upSw = Stopwatch()..start();
+        final newHash = await compute(
+          _pbkdf2IsolateWorker,
+          Pbkdf2Params(inputPin, newSalt, pbkdf2Iterations),
+        );
+        upSw.stop();
+        _lastDerivationLatencyMs = upSw.elapsedMilliseconds;
+
+        await _secureStorage.write(key: _keyPinHash, value: newHash);
+        await _secureStorage.write(key: _keyPinSalt, value: newSalt);
+        await _secureStorage.write(key: _keyPinIterations, value: pbkdf2Iterations.toString());
         _cachedPinHash = newHash;
         _cachedPinSalt = newSalt;
+        _cachedPinIterations = pbkdf2Iterations;
       }
     }
 
     if (isValid) {
       _failedAttempts = 0;
       _lockoutUntil = null;
-      await prefs.setInt(_keyFailedAttempts, 0);
-      await prefs.remove(_keyLockoutUntil);
+      await _secureStorage.write(key: _keyFailedAttempts, value: '0');
+      await _secureStorage.delete(key: _keyLockoutUntil);
       isLockedNotifier.value = false;
       return true;
     } else {
       _failedAttempts++;
-      await prefs.setInt(_keyFailedAttempts, _failedAttempts);
+      await _secureStorage.write(key: _keyFailedAttempts, value: _failedAttempts.toString());
 
       if (_failedAttempts >= 5) {
         // Lockout for 5 minutes (300 seconds)
         _lockoutUntil = DateTime.now().add(const Duration(minutes: 5));
-        await prefs.setInt(_keyLockoutUntil, _lockoutUntil!.millisecondsSinceEpoch);
+        await _secureStorage.write(
+          key: _keyLockoutUntil,
+          value: _lockoutUntil!.millisecondsSinceEpoch.toString(),
+        );
       } else if (_failedAttempts >= 3) {
         // Cooldown for 30 seconds
         _lockoutUntil = DateTime.now().add(const Duration(seconds: 30));
-        await prefs.setInt(_keyLockoutUntil, _lockoutUntil!.millisecondsSinceEpoch);
+        await _secureStorage.write(
+          key: _keyLockoutUntil,
+          value: _lockoutUntil!.millisecondsSinceEpoch.toString(),
+        );
       }
 
       return false;
@@ -230,6 +385,14 @@ class SecurityService with WidgetsBindingObserver {
   }
 
   Future<void> removePin() async {
+    await _secureStorage.delete(key: _keyPinHash);
+    await _secureStorage.delete(key: _keyPinSalt);
+    await _secureStorage.delete(key: _keyPinIterations);
+    await _secureStorage.delete(key: _keyFailedAttempts);
+    await _secureStorage.delete(key: _keyLockoutUntil);
+    await _secureStorage.delete(key: _keyPinEnabled);
+    await _secureStorage.delete(key: _keyBiometricEnabled);
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyPinHash);
     await prefs.remove(_keyPinSalt);
@@ -241,6 +404,7 @@ class SecurityService with WidgetsBindingObserver {
 
     _cachedPinHash = null;
     _cachedPinSalt = null;
+    _cachedPinIterations = null;
     _pinEnabled = false;
     _biometricEnabled = false;
     _failedAttempts = 0;
@@ -249,12 +413,14 @@ class SecurityService with WidgetsBindingObserver {
   }
 
   Future<void> setBiometricsEnabled(bool enabled) async {
+    await _secureStorage.write(key: _keyBiometricEnabled, value: enabled.toString());
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyBiometricEnabled, enabled);
     _biometricEnabled = enabled;
   }
 
   Future<void> setPinEnabled(bool enabled) async {
+    await _secureStorage.write(key: _keyPinEnabled, value: enabled.toString());
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyPinEnabled, enabled);
     _pinEnabled = enabled;
@@ -271,9 +437,12 @@ class SecurityService with WidgetsBindingObserver {
   }
 
   Future<void> resetLockout() async {
-    final prefs = await SharedPreferences.getInstance();
     _failedAttempts = 0;
     _lockoutUntil = null;
+    await _secureStorage.write(key: _keyFailedAttempts, value: '0');
+    await _secureStorage.delete(key: _keyLockoutUntil);
+
+    final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyFailedAttempts);
     await prefs.remove(_keyLockoutUntil);
   }

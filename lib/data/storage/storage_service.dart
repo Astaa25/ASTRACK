@@ -76,19 +76,32 @@ class StorageService {
     await _prefs.setString(_keyProfile, jsonEncode(profile.toJson()));
   }
 
+  static List<FundSource> get defaultSources => [
+    FundSource(
+      id: 'src_default_cash',
+      name: 'Dompet Utama',
+      balance: 0.0,
+      iconName: 'wallet',
+      colorHex: '10B981',
+      description: 'Dompet kas tunai utama',
+      isDefault: true,
+      createdAt: DateTime.now(),
+    ),
+  ];
+
   // --- Fund Sources ---
   List<FundSource> loadSources() {
     final raw = _prefs.getString(_keySources);
     if (raw == null) {
-      final samples = SampleData.initialSources;
-      saveSources(samples);
-      return samples;
+      final defaults = defaultSources;
+      saveSources(defaults);
+      return defaults;
     }
     try {
       final list = jsonDecode(raw) as List;
       return list.map((e) => FundSource.fromJson(e as Map<String, dynamic>)).toList();
     } catch (_) {
-      return SampleData.initialSources;
+      return defaultSources;
     }
   }
 
@@ -101,9 +114,9 @@ class StorageService {
   List<FinancialCategory> loadCategories() {
     final raw = _prefs.getString(_keyCategories);
     if (raw == null) {
-      final samples = SampleData.initialCategories;
-      saveCategories(samples);
-      return samples;
+      final defaults = SampleData.initialCategories;
+      saveCategories(defaults);
+      return defaults;
     }
     try {
       final list = jsonDecode(raw) as List;
@@ -122,15 +135,13 @@ class StorageService {
   List<TransactionItem> loadTransactions() {
     final raw = _prefs.getString(_keyTransactions);
     if (raw == null) {
-      final samples = SampleData.initialTransactions;
-      saveTransactions(samples);
-      return samples;
+      return [];
     }
     try {
       final list = jsonDecode(raw) as List;
       return list.map((e) => TransactionItem.fromJson(e as Map<String, dynamic>)).toList();
     } catch (_) {
-      return SampleData.initialTransactions;
+      return [];
     }
   }
 
@@ -143,15 +154,13 @@ class StorageService {
   List<Budget> loadBudgets() {
     final raw = _prefs.getString(_keyBudgets);
     if (raw == null) {
-      final samples = SampleData.initialBudgets;
-      saveBudgets(samples);
-      return samples;
+      return [];
     }
     try {
       final list = jsonDecode(raw) as List;
       return list.map((e) => Budget.fromJson(e as Map<String, dynamic>)).toList();
     } catch (_) {
-      return SampleData.initialBudgets;
+      return [];
     }
   }
 
@@ -164,15 +173,13 @@ class StorageService {
   List<SavingsGoal> loadSavings() {
     final raw = _prefs.getString(_keySavings);
     if (raw == null) {
-      final samples = SampleData.initialSavingsGoals;
-      saveSavings(samples);
-      return samples;
+      return [];
     }
     try {
       final list = jsonDecode(raw) as List;
       return list.map((e) => SavingsGoal.fromJson(e as Map<String, dynamic>)).toList();
     } catch (_) {
-      return SampleData.initialSavingsGoals;
+      return [];
     }
   }
 
@@ -247,11 +254,15 @@ class StorageService {
     }
   }
 
+  Future<void> clearAllFinancialData() async {
+    await saveSources(defaultSources);
+    await saveTransactions([]);
+    await saveBudgets([]);
+    await saveSavings([]);
+    await saveRecurring([]);
+  }
+
   Future<void> resetToSampleData() async {
-    await saveSources(SampleData.initialSources);
-    await saveTransactions(SampleData.initialTransactions);
-    await saveCategories(SampleData.initialCategories);
-    await saveBudgets(SampleData.initialBudgets);
-    await saveSavings(SampleData.initialSavingsGoals);
+    await clearAllFinancialData();
   }
 }

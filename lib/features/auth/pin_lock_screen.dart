@@ -278,7 +278,7 @@ class _PinLockScreenState extends State<PinLockScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Lupa PIN Keamanan?'),
         content: Text(
-          'Kode reset PIN darurat akan dikirimkan ke email terdaftar Anda ($email).\n\nUntuk demo, gunakan PIN bawaan atau reset melalui data akun.',
+          'Demi perlindungan data finansial Anda, reset PIN memerlukan verifikasi kata sandi akun ($email). Silakan keluar dan masuk kembali menggunakan kata sandi Anda untuk mengatur ulang PIN keamanan.',
         ),
         actions: [
           TextButton(
@@ -289,14 +289,13 @@ class _PinLockScreenState extends State<PinLockScreen>
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.emerald, foregroundColor: Colors.white),
             onPressed: () {
               Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Kode reset PIN telah dikirim ke $email (Demo: 123456)'),
-                  backgroundColor: AppColors.income,
-                ),
+              finance.logout();
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
               );
             },
-            child: const Text('Kirim Kode Reset'),
+            child: const Text('Keluar & Masuk Ulang'),
           ),
         ],
       ),

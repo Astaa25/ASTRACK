@@ -325,9 +325,21 @@ void main() {
     });
 
     test('Soft archive preserves categories used by transactions', () {
-      // Find a category used by existing sample transaction
       final usedCat = finance.categories.firstWhere((c) => c.name == 'Coffee');
       expect(finance.activeCategories.any((c) => c.id == usedCat.id), isTrue);
+
+      // Add a test transaction using this category to verify soft-archive behaviour
+      finance.addTransaction(TransactionItem(
+        id: 'tx_soft_arch_test',
+        type: TransactionType.expense,
+        amount: 25000.0,
+        description: 'Beli Kopi',
+        categoryId: usedCat.id,
+        categoryName: usedCat.name,
+        sourceId: finance.sources.first.id,
+        sourceName: finance.sources.first.name,
+        dateTime: DateTime.now(),
+      ));
 
       // Delete category that is in use -> triggers soft archive
       final success = finance.deleteCategory(usedCat.id);
@@ -395,6 +407,18 @@ void main() {
     });
 
     testWidgets('TransactionsScreen displays daily grouped headers, search, and type filters', (tester) async {
+      finance.addTransaction(TransactionItem(
+        id: 'tx_ui_coffee_1',
+        type: TransactionType.expense,
+        amount: 18000.0,
+        description: 'Coffee Latte',
+        categoryId: 'cat_coffee',
+        categoryName: 'Coffee',
+        sourceId: finance.sources.first.id,
+        sourceName: finance.sources.first.name,
+        dateTime: DateTime.now(),
+      ));
+
       await tester.pumpWidget(
         createTestApp(
           financeProvider: finance,
@@ -413,10 +437,17 @@ void main() {
       expect(find.text('Menabung'), findsOneWidget);
 
       // Verify daily grouping headers or transaction tiles are rendered
-      expect(find.text('Coffee'), findsOneWidget);
+      expect(find.text('Coffee Latte'), findsOneWidget);
     });
 
     testWidgets('DashboardScreen renders Fund Sources Carousel and Safe-to-Spend Card', (tester) async {
+      finance.addFundSource(FundSource(
+        id: 'src_tabungan_test',
+        name: 'Tabungan',
+        balance: 2000000.0,
+        iconName: 'piggy_bank',
+      ));
+
       await tester.pumpWidget(
         createTestApp(
           financeProvider: finance,
@@ -427,7 +458,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Sumber Dana'), findsOneWidget);
-      expect(find.text('Uang Jajan'), findsAtLeastNWidgets(1));
+      expect(find.text('Dompet Utama'), findsAtLeastNWidgets(1));
       expect(find.text('Tabungan'), findsAtLeastNWidgets(1));
       expect(find.text('Aman Dibelanjakan Hari Ini'), findsOneWidget);
     });

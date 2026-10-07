@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app/theme/app_colors.dart';
@@ -22,20 +21,16 @@ class _AdminGatewayConfigScreenState extends State<AdminGatewayConfigScreen> {
   late PaymentMode _selectedMode;
   late PaymentGatewayType _selectedProvider;
   late bool _isSandbox;
-  late TextEditingController _secretController;
-  bool _obscureSecret = true;
   String? _testResult;
 
   @override
   void initState() {
     super.initState();
-    _secretController = TextEditingController();
     _loadConfig();
   }
 
   @override
   void dispose() {
-    _secretController.dispose();
     super.dispose();
   }
 
@@ -48,7 +43,6 @@ class _AdminGatewayConfigScreenState extends State<AdminGatewayConfigScreen> {
       _selectedMode = config.paymentMode;
       _selectedProvider = config.activeProvider;
       _isSandbox = config.isSandbox;
-      _secretController.text = config.webhookSecret;
       _isLoading = false;
     });
   }
@@ -72,7 +66,6 @@ class _AdminGatewayConfigScreenState extends State<AdminGatewayConfigScreen> {
         paymentMode: _selectedMode,
         activeProvider: _selectedProvider,
         isSandbox: _isSandbox,
-        webhookSecret: _secretController.text.trim(),
         adminId: _getAdminId(),
       );
 
@@ -484,39 +477,44 @@ class _AdminGatewayConfigScreenState extends State<AdminGatewayConfigScreen> {
           ),
           const Divider(height: 28),
 
-          // Webhook Secret Input
-          Text(
-            'Webhook Signature Secret',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textP),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _secretController,
-            obscureText: _obscureSecret,
-            style: TextStyle(fontSize: 13, color: textP, fontFamily: 'monospace'),
-            decoration: InputDecoration(
-              hintText: 'Masukkan webhook secret key...',
-              hintStyle: TextStyle(color: textS.withOpacity(0.5)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              suffixIcon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(_obscureSecret ? Icons.visibility_off : Icons.visibility, size: 20),
-                    onPressed: () => setState(() => _obscureSecret = !_obscureSecret),
+          // Zero-Secret Client Architecture (OWASP MASVS Compliance)
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: primary.withAlpha(20),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: primary.withAlpha(60)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.shield_rounded, color: primary, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Zero-Secret Client Architecture (OWASP MASVS)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: textP,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Webhook secret, Midtrans Server Key, dan Xendit Secret Key diisolasi secara eksklusif di Supabase Vault / Edge Function Environment Secrets (CLI: supabase secrets set). Klien Flutter tidak pernah memproses rahasia server.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          height: 1.4,
+                          color: textS,
+                        ),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.copy_rounded, size: 18),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: _secretController.text));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Secret disalin ke papan klip.')),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

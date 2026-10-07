@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:astrack/core/services/security_service.dart';
@@ -5,29 +6,40 @@ import 'package:astrack/core/services/security_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('ASTRACK Security Hardening & PIN Tests', () {
+  group('ASTRACK Security Hardening & PIN Tests (FlutterSecureStorage & PBKDF2 100k)', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
     });
 
-    test('PIN is never stored as plaintext in SharedPreferences', () async {
+    test('PIN hash and salt are stored in FlutterSecureStorage, never in plaintext SharedPreferences', () async {
       final security = SecurityService.instance;
       await security.init();
 
       await security.setPin('123456');
 
       final prefs = await SharedPreferences.getInstance();
-      // Ensure legacy plaintext key does NOT exist
+      // Ensure legacy plaintext and hash keys do NOT exist in unencrypted SharedPreferences
       expect(prefs.containsKey('astrack_user_pin'), isFalse);
-      // Ensure hashed key exists and does not equal raw pin
-      expect(prefs.containsKey('astrack_user_pin_hash'), isTrue);
-      final storedHash = prefs.getString('astrack_user_pin_hash');
-      expect(storedHash, isNotNull);
-      expect(storedHash, isNot('123456'));
-      expect(storedHash!.length, 64); // SHA-256 hex string length
+      expect(prefs.containsKey('astrack_user_pin_hash'), isFalse);
+      expect(prefs.containsKey('astrack_user_pin_salt'), isFalse);
+
+      // Verify stored in FlutterSecureStorage
+      final secureHash = await security.secureStorage.read(key: 'astrack_user_pin_hash');
+      final secureSalt = await security.secureStorage.read(key: 'astrack_user_pin_salt');
+      final secureIters = await security.secureStorage.read(key: 'astrack_pin_iterations');
+
+      expect(secureHash, isNotNull);
+      expect(secureHash, isNot('123456'));
+      expect(secureHash!.length, 64); // SHA-256 64-hex chars
+      expect(secureSalt, isNotNull);
+      expect(secureSalt!.length, 32); // 16 bytes = 32 hex chars
+      expect(secureIters, '100000');
+      expect(security.currentIterations, equals(100000));
+      expect(security.lastDerivationLatencyMs, greaterThanOrEqualTo(0));
     });
 
-    test('Verify valid PIN succeeds and resets failed attempts', () async {
+    test('Verify valid PIN succeeds with isolate execution and resets failed attempts', () async {
       final security = SecurityService.instance;
       await security.init();
       await security.setPin('654321');
@@ -36,9 +48,10 @@ void main() {
       expect(isMatch, isTrue);
       expect(security.failedAttempts, 0);
       expect(security.isLockedOut, isFalse);
+      expect(security.lastDerivationLatencyMs, greaterThanOrEqualTo(0));
     });
 
-    test('Consecutive wrong attempts trigger cooldown and lockout', () async {
+    test('Consecutive wrong attempts trigger cooldown and lockout in secure storage', () async {
       final security = SecurityService.instance;
       await security.init();
       await security.setPin('112233');
@@ -58,11 +71,15 @@ void main() {
       expect(security.isLockedOut, isTrue);
       expect(security.remainingLockoutSeconds, greaterThan(0));
 
+      // Stored in secure storage
+      final failedInStorage = await security.secureStorage.read(key: 'astrack_pin_failed_attempts');
+      expect(failedInStorage, '3');
+
       // Cannot attempt while locked out
       expect(await security.verifyPin('112233'), isFalse);
     });
 
-    test('Removing PIN wipes hash and reset lock state completely', () async {
+    test('Removing PIN wipes hash, salt, and lockout state from secure storage completely', () async {
       final security = SecurityService.instance;
       await security.init();
       await security.setPin('998877');
@@ -73,6 +90,11 @@ void main() {
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.containsKey('astrack_user_pin_hash'), isFalse);
+
+      final secureHash = await security.secureStorage.read(key: 'astrack_user_pin_hash');
+      final secureSalt = await security.secureStorage.read(key: 'astrack_user_pin_salt');
+      expect(secureHash, isNull);
+      expect(secureSalt, isNull);
     });
   });
 }

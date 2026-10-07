@@ -668,9 +668,13 @@ class FinanceProvider extends ChangeNotifier {
 
   double get netCashFlow => monthlyIncome - monthlyExpense;
 
-  void resetToSampleData() async {
-    await _storage.resetToSampleData();
+  Future<void> clearAllFinancialData() async {
+    await _storage.clearAllFinancialData();
     loadAllData();
+  }
+
+  void resetToSampleData() async {
+    await clearAllFinancialData();
   }
 
   String exportData() => _storage.exportAllDataAsJson();

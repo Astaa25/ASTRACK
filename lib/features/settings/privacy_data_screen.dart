@@ -245,7 +245,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.expense, foregroundColor: Colors.white),
             onPressed: () {
-              finance.resetToSampleData();
+              finance.clearAllFinancialData();
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Data finansial telah dibersihkan.'), backgroundColor: AppColors.expense),
@@ -603,7 +603,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
               child: SwitchListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 title: Text(
-                  'Laporan Galat Sistem (Crash Reporting)',
+                  'Laporan Galat Sistem (Crash Reporting) [PARTIAL]',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -611,7 +611,7 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
                   ),
                 ),
                 subtitle: Text(
-                  'Kirim laporan galat teknis anonim ke tim pengembang untuk mempercepat perbaikan bug. Data finansial Anda TIDAK PERNAH dikirim.',
+                  'Preferensi lokal penanganan galat. [PARTIAL]: Belum terhubung ke server remote pihak ketiga (Sentry/Crashlytics). Data finansial Anda TIDAK PERNAH dikirim.',
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,

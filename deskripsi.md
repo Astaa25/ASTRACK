@@ -1377,42 +1377,42 @@ lib/
 
 # 62. Testing Suite & Verification Matrix
 
-Ekosistem pengujian otomatis ASTRACK terdiri dari **31 berkas uji komprehensif** dengan total **290 tests (100% Pass, 0 Failure, 0 Flaky)**:
+Ekosistem pengujian otomatis ASTRACK terdiri dari **31 berkas uji komprehensif** dengan total **298 definisi uji (290 tests pass / 13 tests auto-skip saat live cloud probes tidak diset via `--dart-define`, 0 Failure, 0 Flaky)**:
 
 | No | Berkas Uji (`test/`) | Fokus Pengujian | Jumlah Test | Status |
 |---|---|---|:---:|:---:|
-| 1 | `financial_engine_test.dart` | Mutasi kas, penambahan saldo, pemotongan belanja, dan alokasi transfer | 8 | `PASS` |
-| 2 | `phase1_core_ledger_test.dart` | Integritas buku besar, reversal transaksi, dan konsistensi rekonsiliasi | 16 | `PASS` |
-| 3 | `savings_goal_calculations_test.dart`| Perhitungan tabungan, proyeksi tenggat waktu, dan setoran impian | 6 | `PASS` |
-| 4 | `advanced_budget_analytics_test.dart`| Ambang batas overbudget dan peringatan multi-level | 8 | `PASS` |
-| 5 | `specification_compliance_test.dart` | Kepatuhan model data, format Rupiah, dan serialisasi JSON | 14 | `PASS` |
-| 6 | `security_hardening_pin_test.dart` | Enkripsi salt SHA-256 PIN, brute-force delay, dan lockout | 8 | `PASS` |
-| 7 | `adversarial_security_audit_test.dart`| Serangan eskalasi hak akses, clock tampering, bypass pro, dan replay webhook | 24 | `PASS` |
-| 8 | `coupon_and_pricing_test.dart` | Validasi kupon server-side, zero-floor, limit kuota, dan audit harga | 20 | `PASS` |
-| 9 | `dynamic_upgrade_paywall_test.dart` | Feature gating, rendering paywall modal dinamis, dan order checkout | 6 | `PASS` |
-| 10 | `payment_architecture_test.dart` | Abstraksi payment provider, signature HMAC, dan order lifecycle | 8 | `PASS` |
-| 11 | `phase4_monetization_manual_qris_test.dart`| Alur checkout QRIS manual, generator kode unik, dan antrean admin | 12 | `PASS` |
-| 12 | `phase5_payment_gateway_architecture_test.dart`| Integrasi gateway multi-channel dan verifikasi webhook | 16 | `PASS` |
-| 13 | `ocr_receipt_parser_test.dart` | Penguraian teks struk leksikal, ekstraksi total belanja, dan tanggal | 8 | `PASS` |
-| 14 | `ocr_pipeline_comprehensive_test.dart`| Pipeline OCR multibahasa dan penanganan struk kabur | 6 | `PASS` |
-| 15 | `remote_ai_provider_test.dart` | Integrasi client Gemini, fallback parser lokal, dan kuota bulanan | 6 | `PASS` |
-| 16 | `phase3_ai_and_ocr_test.dart` | Parsing bahasa alami kalimat transaksi dan review draf | 14 | `PASS` |
-| 17 | `csv_import_pipeline_test.dart` | Validasi format berkas CSV, pembersihan angka, dan impor massal | 8 | `PASS` |
-| 18 | `financial_cloud_sync_test.dart` | Antrean mutasi offline dan sinkronisasi cloud dua arah | 6 | `PASS` |
-| 19 | `financial_insights_test.dart` | Algoritma wawasan cerdas MoM, burn rate, dan kategori terbesar | 8 | `PASS` |
-| 20 | `personalization_and_appearance_test.dart`| Kustomisasi tema bertahap, skala font, dan live preview card | 12 | `PASS` |
-| 21 | `phase0_foundation_test.dart` | Fondasi konfigurasi dasar, konstanta, dan storage service | 6 | `PASS` |
-| 22 | `phase2_planning_and_insight_test.dart`| Alur perencanaan anggaran, target tabungan, dan wawasan finansial | 14 | `PASS` |
-| 23 | `phase6_admin_dashboard_test.dart` | Panel admin, KPI SaaS, moderasi pengguna, dan kalkulasi MRR | 10 | `PASS` |
-| 24 | `phase7_hardening_accessibility_release_test.dart`| Aksesibilitas WCAG AA, kontras warna, dan target sentuh | 8 | `PASS` |
+| 1 | `advanced_budget_analytics_test.dart` | Ambang batas overbudget dan peringatan multi-level | 2 | `PASS` |
+| 2 | `adversarial_security_audit_test.dart`| Serangan eskalasi hak akses, clock tampering, bypass pro, dan replay webhook | 24 | `PASS` |
+| 3 | `apk_distribution_and_update_test.dart`| Pengujian pembaruan mandiri APK, url whitelist, semver matrix, snooze & throttle | 10 | `PASS` |
+| 4 | `coupon_and_pricing_test.dart` | Validasi kupon server-side, zero-floor, limit kuota, dan audit harga | 20 | `PASS` |
+| 5 | `csv_import_pipeline_test.dart` | Validasi format berkas CSV, deteksi duplikasi, dan impor massal | 3 | `PASS` |
+| 6 | `dynamic_upgrade_paywall_test.dart` | Feature gating, rendering paywall modal dinamis, dan order checkout | 6 | `PASS` |
+| 7 | `financial_cloud_sync_test.dart` | Antrean mutasi offline dan sinkronisasi cloud dua arah | 1 | `PASS` |
+| 8 | `financial_engine_test.dart` | Mutasi kas, penambahan saldo, pemotongan belanja, dan alokasi transfer | 1 | `PASS` |
+| 9 | `financial_insights_test.dart` | Algoritma wawasan cerdas MoM, burn rate, dan kategori terbesar | 3 | `PASS` |
+| 10 | `ocr_pipeline_comprehensive_test.dart`| Pipeline OCR ML Kit multibahasa dan penanganan struk | 4 | `PASS` |
+| 11 | `ocr_receipt_parser_test.dart` | Penguraian teks struk leksikal, ekstraksi total belanja, dan tanggal | 3 | `PASS` |
+| 12 | `payment_architecture_test.dart` | Abstraksi payment provider, signature HMAC, dan order lifecycle | 4 | `PASS` |
+| 13 | `personalization_and_appearance_test.dart`| Kustomisasi tema bertahap, skala font, dan live preview card | 15 | `PASS` |
+| 14 | `phase0_foundation_test.dart` | Fondasi konfigurasi dasar, konstanta, dan storage service | 21 | `PASS` |
+| 15 | `phase1_core_ledger_test.dart` | Integritas buku besar, reversal transaksi, dan konsistensi rekonsiliasi | 17 | `PASS` |
+| 16 | `phase2_missing_features_test.dart`| Uji siklus hidup pengguna: reset password, crash privacy toggle, hapus akun RLS | 7 | `PASS` |
+| 17 | `phase2_planning_and_insight_test.dart`| Alur perencanaan anggaran, target tabungan, dan wawasan finansial | 15 | `PASS` |
+| 18 | `phase3_ai_and_ocr_test.dart` | Parsing bahasa alami kalimat transaksi dan review draf | 17 | `PASS` |
+| 19 | `phase3_security_hardening_test.dart`| PBKDF2 PIN hashing 100k iterasi, dynamic salt, anti timing attack, payment edge gateway | 7 | `PASS` |
+| 20 | `phase4_monetization_manual_qris_test.dart`| Alur checkout QRIS manual, generator kode unik, dan antrean admin | 17 | `PASS` |
+| 21 | `phase5_payment_gateway_architecture_test.dart`| Integrasi gateway multi-channel dan verifikasi webhook | 17 | `PASS` |
+| 22 | `phase6_admin_dashboard_test.dart` | Panel admin, KPI SaaS, moderasi pengguna, dan kalkulasi MRR | 9 | `PASS` |
+| 23 | `phase7_hardening_accessibility_release_test.dart`| Aksesibilitas WCAG AA, kontras warna, target sentuh, dan izin AndroidManifest | 14 | `PASS` |
+| 24 | `pixel_overflow_audit_test.dart`| Audit visual anti-overflow 27+ layar & modal dialog pada viewport ultra-kompak 320dp | 27 | `PASS` |
 | 25 | `pixel_overflow_hardening_test.dart` | Uji regresi visual 360dp bebas RenderFlex overflow pada dashboard & auth | 4 | `PASS` |
-| 26 | `supabase_live_cloud_probe_test.dart`| 13 live runtime probes langsung ke database PostgreSQL Supabase Cloud | 13 | `PASS` |
-| 27 | `apk_distribution_and_update_test.dart`| Pengujian pembaruan mandiri APK, sha256 checksum verifikasi, dan parser rilis | 9 | `PASS` |
-| 28 | `phase2_missing_features_test.dart`| Uji siklus hidup pengguna: reset password, crash privacy toggle, hapus akun RLS | 8 | `PASS` |
-| 29 | `phase3_security_hardening_test.dart`| PBKDF2 PIN hashing 10k iterasi, dynamic salt, anti timing attack, payment edge gateway | 7 | `PASS` |
-| 30 | `pixel_overflow_audit_test.dart`| Audit visual anti-overflow 27+ layar & modal dialog pada viewport ultra-kompak 320dp | 27 | `PASS` |
+| 26 | `remote_ai_provider_test.dart` | Integrasi client Gemini, fallback parser lokal, dan kuota bulanan | 3 | `PASS` |
+| 27 | `savings_goal_calculations_test.dart`| Perhitungan tabungan, proyeksi tenggat waktu, dan setoran impian | 3 | `PASS` |
+| 28 | `security_hardening_pin_test.dart` | FlutterSecureStorage hardware-backed, PBKDF2 100k isolate, delay, dan lockout | 4 | `PASS` |
+| 29 | `specification_compliance_test.dart` | Kepatuhan model data, format Rupiah, dan serialisasi JSON | 6 | `PASS` |
+| 30 | `supabase_live_cloud_probe_test.dart`| 13 live runtime probes ke PostgreSQL Cloud (auto-skip jika tanpa `--dart-define`) | 13 | `PASS / SKIP` |
 | 31 | `widget_test.dart` | Uji integritas dasar pohon widget Flutter | 1 | `PASS` |
-| **TOTAL** | **31 Berkas Uji** | **Seluruh Sistem & Fitur Aplikasi ASTRACK** | **290 Tests** | **100% PASS** |
+| **TOTAL** | **31 Berkas Uji** | **Seluruh Sistem & Fitur Aplikasi ASTRACK** | **298 Tests** | **100% PASS** |
 
 ---
 
@@ -1594,18 +1594,19 @@ ASTRACK menggabungkan performa tinggi kompilasi native Flutter dengan keandalan 
 | `provider` | `^6.1.5+1` | State management reaktif (`FinanceProvider`, `ThemeProvider`) | Ringan, hemat memori, dan efisien tanpa overhead |
 | `intl` | `^0.20.3` | Format nominal mata uang (`NumberFormat.currency`) dan tanggal | Format presisi Rupiah bertitik (`Rp 25.000`) dan kalender lokal |
 | `shared_preferences` | `^2.5.5` | Penyimpanan persisten lokal sandboxed aplikasi (tidak terenkripsi otomatis di level OS) | Menopang arsitektur *offline-first* dengan pembacaan seketika |
+| `flutter_secure_storage` | `^10.3.4` | Penyimpanan kredensial sensitif terenkripsi hardware-backed (Android Keystore / iOS Keychain) | Mengamankan hash PIN, dynamic salt, dan counter lockout dari ekstraksi root/adb |
 | `fl_chart` | `^1.2.0` | Mesin perender grafik data finansial (Pie, Donut, Bar, Dual-Line) | Visualisasi interaktif performa tinggi dengan animasi mulus |
 | `google_fonts` | `^8.2.1` | Pustaka tipografi font *Plus Jakarta Sans* | Keterbacaan angka finansial tinggi dan estetika editorial |
 | `uuid` | `^4.6.0` | Generator identifier unik UUID v4 (`RFC 4122`) | Primary key acak terdistribusi tanpa bentrok ID antar-perangkat |
 | `http` | `^1.6.0` | Klien komunikasi jaringan HTTP REST API | Menghubungkan client ke REST endpoint cloud & AI service |
 | `supabase_flutter` | `^2.18.0` | SDK resmi Supabase (Auth GoTrue, Database Client, RPC) | Manajemen sesi JWT, query PostgreSQL, dan Stored Procedures |
-| `crypto` | `^3.0.6` | Algoritma hashing kriptografis SHA-256, HMAC, dan PBKDF2 | KDF PIN 10.000 iterasi dan verifikasi signature webhook |
+| `crypto` | `^3.0.6` | Algoritma hashing kriptografis SHA-256, HMAC, dan PBKDF2 | KDF PIN 100.000 iterasi dan verifikasi signature webhook |
 | `image_picker` | `^1.2.3` | Antarmuka interaksi hardware kamera dan galeri foto | Pengambilan berkas gambar foto nota/struk belanja |
 | `google_mlkit_text_recognition`| `^0.17.1` | Model Machine Learning on-device untuk ekstraksi teks OCR | Pembacaan leksikal teks kuitansi secara offline (Android/iOS) |
 | `package_info_plus` | `^8.2.1` | Pembaca metadata versi aplikasi (`versionName`, `buildNumber`) | Deteksi pembaruan OTA mandiri dan info rilis pada About |
 | `url_launcher` | `^6.3.1` | Peluncur tautan eksternal (Telegram, WhatsApp, Web, Unduhan) | Whitelist host HTTPS resmi untuk update dan bantuan |
 | `cupertino_icons` | `^1.0.8` | Pustaka ikon vektor Apple Cupertino | Pelengkap ikon antarmuka iOS hybrid |
-| `flutter_test` | `SDK Dev` | Mesin pengujian otomatis unit, widget, dan integrasi | Menguji **290 kasus uji (100% Pass)** secara otomatis |
+| `flutter_test` | `SDK Dev` | Mesin pengujian otomatis unit, widget, dan integrasi | Menguji **31 berkas pengujian / 298 definisi uji (100% Pass / Auto-skip)** |
 | `flutter_lints` | `^6.0.0 Dev` | Analisis statis aturan penulisan kode bersih resmi Dart | Memastikan 0 error dan 0 warning pada `flutter analyze` |
 
 ### 1.1 Status Implementasi Modul Lanjutan & Ketergantungan Paket
@@ -1615,14 +1616,14 @@ Berdasarkan audit komparatif antara kode aktual dan rancangan arsitektur:
 * **Remote FCM Push Notifications**: `[PARTIAL]` (Model pendaftaran multi-perangkat `DeviceToken` dan skema database `public.user_device_tokens` telah aktif; SDK klien `firebase_messaging` belum diinstal).
 * **Hardware Biometrik Sidik Jari**: `[PARTIAL]` (Sistem penguncian PIN PBKDF2-HMAC-SHA256 dengan lockout aktif; plugin native `local_auth` belum diinstal di `pubspec.yaml`).
 * **Voice Speech-to-Text**: `[PARTIAL]` (Lembar modal suara dan rule-based conversational intent parser telah aktif; plugin native `speech_to_text` belum diinstal di `pubspec.yaml`).
-* **Crash Reporting & Telemetri**: `[IMPLEMENTED - TELEMETRI PRIVASI INTERNAL]` (Didukung oleh `CrashReportingService` berbasis toggle opt-in UU PDP, tanpa kebocoran data finansial/PII, dan tombol interaktif *Laporkan Masalah* via Telegram/Email berformat versi aplikasi otomatis).
+* **Crash Reporting & Telemetri**: `[PARTIAL]` (Didukung toggle preferensi opt-in UU PDP pada `PrivacyDataScreen` dan penyimpanan preferensi lokal `SharedPreferences`; saat ini berstatus partial karena belum terhubung ke SDK remote pihak ketiga seperti Sentry/Crashlytics).
 
 ### 2. Pemanfaatan Perangkat Keras & Sensor Ponsel (Hardware & Device Capabilities)
 ASTRACK mengintegrasikan kemampuan perangkat keras fisik pengguna untuk mempermudah pencatatan keuangan:
 1. **Kamera Fisik Ponsel (`Camera Sensor`)**:
    Digunakan oleh modul OCR Receipt Scanner untuk membidik nota belanja fisik secara instan.
-2. **Media Penyimpanan Lokal (`Flash Memory / Internal Disk`)**:
-   Menyimpan database lokal sandboxed (`SharedPreferences`), di mana kredensial PIN diamankan secara mandiri dengan algoritma derivasi kunci **PBKDF2-HMAC-SHA256 (10.000 iterasi)** dan salt 16-byte unik per perangkat.
+2. **Media Penyimpanan Lokal & Hardware Keystore (`Secure Storage / Keystore`)**:
+   Menyimpan preferensi dan mutasi lokal di `SharedPreferences`, di mana kredensial hash PIN, garam kriptografis 16-byte, dan stempel lockout diamankan secara mandiri dalam **`FlutterSecureStorage`** dengan algoritma derivasi kunci **PBKDF2-HMAC-SHA256 (>= 100.000 iterasi)** yang berjalan di background isolate.
 3. **Mikrofon & Audio Recorder (`Microphone`)**:
    Merekam suara pengguna untuk fitur *Voice Transaction Input* berbasis pengenalan ucapan Bahasa Indonesia.
 4. **Sensor Getar Haptic (`Haptic Feedback Engine`)**:
@@ -1661,142 +1662,140 @@ ASTRACK mengintegrasikan kemampuan perangkat keras fisik pengguna untuk mempermu
 
 # 77. Arsitektur Distribusi & Pembaruan APK Mandiri (Self-Hosted OTA App Updates)
 
-* **Berkas Sumber**: `lib/features/update/services/app_update_service.dart`, `lib/features/update/models/app_update_info.dart`, `lib/features/update/widgets/update_available_dialog.dart`, `android/app/src/main/kotlin/com/astrack/app/MainActivity.kt`
-* **Test Suite Terverifikasi**: `test/apk_distribution_and_update_test.dart` (9 Tests, 100% Pass)
+* **Berkas Sumber**: `lib/features/update/services/app_update_service.dart`, `lib/features/update/models/app_update_info.dart`, `lib/features/update/widgets/update_available_dialog.dart`, `lib/features/update/screens/force_update_screen.dart`
+* **Test Suite Terverifikasi**: `test/apk_distribution_and_update_test.dart` (10 Tests, 100% Pass)
 
 ### 1. Latar Belakang & Filosofi
-Untuk memastikan kemandirian distribusi tanpa ketergantungan mutlak pada ekosistem toko aplikasi pihak ketiga (*decoupling from proprietary app stores*), ASTRACK dirancang dengan sistem pembaruan Over-the-Air (OTA) biner APK mandiri. Pengguna yang mengunduh APK langsung dari portal resmi atau rilis GitHub dapat menerima pembaruan versi baru secara aman, transparan, dan otomatis.
+Untuk memastikan kemandirian distribusi tanpa ketergantungan mutlak pada ekosistem toko aplikasi pihak ketiga (*decoupling from proprietary app stores*), ASTRACK dirancang dengan sistem pembaruan Over-the-Air (OTA) mandiri yang terhubung langsung ke basis data PostgreSQL Supabase Cloud.
 
-### 2. Pipeline Deteksi & Pemeriksaan Rilis
-1. **GitHub Releases API Manifest**: Klien secara berkala memeriksa rilis terbaru melalui REST API GitHub (`/repos/abrarast/astrack/releases/latest`) atau manifest rilis JSON terhosting.
-2. **Deterministic SemVer Comparison**:
-   Versi aplikasi diurai menjadi komponen `[major, minor, patch]` dan dibandingkan secara deterministik:
-   $$\text{isNewerVersion} \iff (M_r > M_c) \lor (M_r = M_c \land m_r > m_c) \lor (M_r = M_c \land m_r = m_c \land p_r > p_c)$$
-   Di mana rilis baru hanya dipicu jika versi biner lebih tinggi dari versi aktif.
+### 2. Pipeline Deteksi & Pemeriksaan Rilis (Supabase RPC Engine)
+1. **Supabase Stored Procedure `get_latest_app_version`**:
+   Klien secara berkala memeriksa rilis terbaru dengan mengeksekusi RPC aman:
+   ```dart
+   final response = await client.rpc('get_latest_app_version', params: {'p_platform': 'android'});
+   ```
+   Data rilis diambil dari tabel cloud `public.app_versions` yang memuat `version_name`, `build_number`, `min_supported_build`, `download_url`, `release_notes`, dan `sha256_checksum`.
+2. **Deterministic Build Number & SemVer Evaluation**:
+   Versi dievaluasi secara bertingkat:
+   * **Force Update**: Jika `currentBuild < info.minSupportedBuild`, pengguna wajib memperbarui dan diarahkan ke `ForceUpdateScreen` tanpa opsi lewati (*blocking update*).
+   * **Optional Update**: Jika `currentBuild < info.buildNumber`, dialog `UpdateAvailableDialog` muncul menawarkan rincian pembaruan, dengan opsi perbarui sekarang atau tunda (*Snooze* 3 hari).
+   * **Up to Date**: Jika `currentBuild >= info.buildNumber`, aplikasi beroperasi normal.
+3. **Throttling & Snooze Management**:
+   Pemeriksaan latar belakang dibatasi secara otomatis dengan interval throttling 6 jam (`astrack_last_update_check`). Aksi tunda pengguna disimpan secara persisten di storage lokal selama 3 hari.
+4. **Prinsip Fail-Open Offline**:
+   Jika perangkat pengguna dalam kondisi luring (*offline*) atau terjadi kegagalan jaringan, pemeriksaan versi tidak memblokir aplikasi dan mengembalikan `(UpdateStatus.unknown, null)`, menjaga prinsip *offline-first*.
 
-### 3. Validasi Integritas Kriptografis Biner (SHA-256 Digest Verification)
-Sebelum biner APK diizinkan untuk dieksekusi oleh sistem operasi, sistem melakukan verifikasi integritas berkas secara ketat:
-* Berkas `.apk` yang diunduh dibaca ke dalam stream byte dan dihitung nilai ringkasan SHA-256 miliknya:
-  $$\text{ComputedSHA256} = \text{SHA-256}(\text{DownloadedBytes})$$
-* Nilai tersebut dicocokkan dengan nilai `sha256Checksum` resmi pada manifest rilis.
-* Jika terjadi ketidakcocokan sekecil apa pun (*hash mismatch*), berkas unduhan langsung dihapus dari disk lokal dan instalasi digagalkan demi melindungi pengguna dari serangan *Man-in-the-Middle* (MitM) atau biner yang korup.
-
-### 4. Integrasi Android PackageInstaller Session API
-Proses instalasi memanfaatkan antarmuka modern Android `PackageInstaller.Session` melalui Platform Channel Flutter:
-* Tidak menggunakan metode lama `Intent.ACTION_VIEW` yang rentan terhadap galat `FileUriExposedException`.
-* Menangani izin `REQUEST_INSTALL_PACKAGES` secara terpandu dengan dialog konfirmasi yang ramah pengguna.
-* Memberikan umpan balik progres unduhan real-time (*bytes received / total bytes*) dan dialog rincian pembaruan berformat Markdown.
+### 3. Distribusi Tautan Terproteksi & Peluncuran Peramban Eksternal
+* **Whitelist Domain Resmi**: Tautan unduhan diverifikasi secara ketat hanya menerima protokol `https` dan domain resmi yang terdaftar pada whitelist (`t.me`, `telegram.me`).
+* **Peluncuran Aplikasi / Peramban Eksternal**:
+  Pengguna yang memilih perbarui diarahkan ke tautan unduh resmi saluran Telegram melalui peramban web eksternal menggunakan `url_launcher` dengan mode `LaunchMode.externalApplication`.
 
 ---
 
 # 78. Siklus Hidup Akun Pengguna & Privasi Lanjutan (User Lifecycle & Advanced Privacy)
 
-* **Berkas Sumber**: `lib/features/auth/forgot_password_screen.dart`, `lib/features/auth/reset_password_screen.dart`, `lib/features/settings/privacy_data_screen.dart`, `lib/features/policy/policy_screen.dart`
-* **Test Suite Terverifikasi**: `test/phase2_missing_features_test.dart` (8 Tests, 100% Pass)
+* **Berkas Sumber**: `lib/features/auth/forgot_password_screen.dart`, `lib/features/auth/reset_password_screen.dart`, `lib/features/settings/privacy_data_screen.dart`, `lib/features/policy/policy_screen.dart`, `android/app/src/main/AndroidManifest.xml`
+* **Test Suite Terverifikasi**: `test/phase2_missing_features_test.dart` (7 Tests, 100% Pass)
 
-### 1. Alur Pemulihan Sandi Mandiri (Forgot & Reset Password Flow)
-* **`ForgotPasswordScreen`**: Menyediakan formulir pemulihan kata sandi dengan validasi sintaks email standar RFC 5322. Mengirimkan tautan reset kata sandi atau kode token OTP melalui Supabase GoTrue Auth API (`resetPasswordForEmail`).
-* **`ResetPasswordScreen`**: Menangani input kata sandi baru pasca verifikasi token. Dilengkapi indikator kekuatan kata sandi dinamis (panjang minimal 8 karakter, kombinasi alfabet dan numerik) serta konfirmasi sandi berlapis sebelum memanggil `updateUser()`.
+### 1. Alur Pemulihan Sandi Mandiri & Deep Link Callback
+* **`ForgotPasswordScreen` & Supabase GoTrue**: Mengirimkan email pemulihan sandi via `sendPasswordResetEmail(email)` dengan konfigurasi redirect callback:
+  ```dart
+  await client.auth.resetPasswordForEmail(
+    email.trim(),
+    redirectTo: 'io.supabase.astrack://reset-callback',
+  );
+  ```
+* **Integrasi Deep Link Android**: `android/app/src/main/AndroidManifest.xml` mengonfigurasi `intent-filter` berskema `io.supabase.astrack` dengan host `reset-callback` sehingga tautan verifikasi dari email otomatis membuka aplikasi dan mengarahkan pengguna ke `ResetPasswordScreen`.
+* **`ResetPasswordScreen`**: Menangani input kata sandi baru dengan indikator kekuatan sandi dan konfirmasi sandi berlapis sebelum memanggil `updateUserPassword()`.
 
 ### 2. Hak Penghapusan Akun Permanen (GDPR / UU PDP "Right to be Forgotten")
-Pengguna memiliki kedaulatan mutlak atas data pribadinya:
 * **Konfirmasi Bertingkat**: Pengguna diwajibkan mengetikkan frasa konfirmasi eksplisit (*type-to-confirm*) untuk mencegah penghapusan yang tidak disengaja.
-* **Pembersihan Data Lokal Total**: `StorageService.clearAll()` dieksekusi seketika, menghapus transaksi, rekening, anggaran, impian tabungan, tagihan rutin, preferensi, dan hash PIN dari penyimpanan perangkat.
-* **Pembersihan Cloud & Pelepasan Sesi**: Sesi autentikasi JWT dicabut (`signOut()`), dan rekonsiliasi data cloud dijalankan sehingga tidak ada data tertinggal (*zero orphaned user records*).
+* **Pembersihan Data Lokal Total**: Seluruh data transaksi lokal pada `SharedPreferences` dan kredensial PIN pada `FlutterSecureStorage` dibersihkan seketika.
+* **Pembersihan Cloud RPC `delete_my_account`**: Menjalankan penghapusan *cascade purge* akun dan data finansial terkait di Supabase PostgreSQL, mencabut sesi JWT (`signOut()`), dan mengarahkan pengguna kembali ke halaman Login.
 
-### 3. Kendali Privasi Telemetri & Crash Reporting (Opt-In Toggle)
-* Disediakan toggle preferensi privasi pada `PrivacyDataScreen` (`Crash & Telemetry Reporting`).
-* Pengguna dapat memilih untuk menonaktifkan pengiriman diagnostik galat crash kapan pun. Status preferensi disimpan secara persisten di storage lokal dan dihormati oleh seluruh penangan eksepsi global aplikasi.
+### 3. Kendali Privasi Telemetri & Crash Reporting `[PARTIAL]`
+* Disediakan toggle preferensi privasi pada `PrivacyDataScreen` bertanda `[PARTIAL]`.
+* Status preferensi disimpan di `SharedPreferences` lokal (`astrack_crash_reporting_enabled`). Saat ini belum terhubung ke SDK telemetri pihak ketiga seperti Sentry atau Crashlytics guna menjamin kedaulatan data privasi.
 
-### 4. Saluran Dukungan Resmi & Kebijakan Pengembalian Dana (Support & Refund Policy)
-* **`PolicyScreen`**: Memuat dokumentasi transparansi hukum mengenai ketentuan lisensi, hak pembatalan transaksi, dan kebijakan pengembalian dana (*Refund Policy*) untuk paket Basic dan Pro dalam rentang 7 hari kerja.
-* Menyediakan tautan langsung (*direct action*) menuju saluran email bantuan resmi (`support@astrack.id`) dan pesan bantuan WhatsApp pengembang.
+### 4. Saluran Dukungan Resmi & Ketentuan Transaksi
+* **`PolicyScreen`**: Memuat dokumentasi transparansi hukum mengenai pemrosesan data lokal, privasi AI, dan saluran kontak bantuan resmi (`support@astrack.app` dan Telegram).
+* **Kebijakan Refund**: Berstatus `[TODO: Kebijakan pengembalian dana (refund) resmi sedang dalam peninjauan tim legal]`.
 
 ---
 
 # 79. Hardening Keamanan Kriptografis Tingkat Tinggi (Cryptographic Hardening & Salt Migration)
 
 * **Berkas Sumber**: `lib/core/services/security_service.dart`
-* **Test Suite Terverifikasi**: `test/phase3_security_hardening_test.dart` (7 Tests, 100% Pass)
+* **Test Suite Terverifikasi**: `test/phase3_security_hardening_test.dart` (7 Tests, 100% Pass) & `test/security_hardening_pin_test.dart` (4 Tests, 100% Pass)
 
-### 1. Spesifikasi PBKDF2-HMAC-SHA256
-ASTRACK meningkatkan standar hashing PIN lokal dari hash statis sederhana menjadi algoritma peregangan kunci standar industri **PBKDF2 (Password-Based Key Derivation Function 2)** dengan fungsi pseudo-random HMAC-SHA256:
-* **Jumlah Iterasi**: 10.000 putaran kalkulasi (*work factor / computational cost*), dirancang untuk memperlambat serangan brute-force berbasis GPU atau ASIC hingga jutaan kali lipat.
-* **Garam Dinamis Acak Per-Perangkat**: Setiap perangkat menghasilkan garam kriptografis acak 16-byte (`128-bit`) menggunakan `Random.secure()` saat PIN pertama kali dibuat.
-* **Format Penyimpanan Persisten**:
-  $$\text{StorageEntry} = \texttt{"pbkdf2:10000:<salt\_hex>:<hash\_hex>"}$$
+### 1. Spesifikasi PBKDF2-HMAC-SHA256 >= 100.000 Iterasi & Isolate Execution
+ASTRACK mengamankan PIN 6-digit pengguna menggunakan algoritma derivasi kunci standar industri **PBKDF2 (Password-Based Key Derivation Function 2)** dengan fungsi pseudo-random HMAC-SHA256:
+* **Jumlah Iterasi**: **>= 100.000 putaran kalkulasi** (*work factor* standar OWASP), memperlambat serangan brute-force berbasis GPU atau peretasan offline.
+* **Eksekusi di Background Isolate**: Kalkulasi 100.000 iterasi dijalankan di thread terpisah menggunakan fungsi `compute()` Flutter. Hal ini mencegah pembekuan (*UI freezing / frame drops*) pada antarmuka utama saat validasi PIN.
+* **Pengukuran Latensi Runtime**: Durasi kalkulasi diukur menggunakan `Stopwatch` dan dicatat dalam telemetri (`lastDerivationLatencyMs`, rata-rata 600–800ms).
+* **Garam Dinamis Acak Per-Perangkat**: Garam kriptografis acak 16-byte (`128-bit` / 32 hex chars) dihasilkan menggunakan `Random.secure()`.
 
-### 2. Eliminasi Serangan Waktu (Constant-Time String Comparison)
-Untuk menangkis serangan analisis waktu respons (*side-channel timing attacks*) yang dapat mengungkap digit PIN byte demi byte, verifikasi hash diimplementasikan dengan algoritma waktu konstan:
-```dart
-static bool _constantTimeEquals(String a, String b) {
-  if (a.length != b.length) return false;
-  int result = 0;
-  for (int i = 0; i < a.length; i++) {
-    result |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
-  }
-  return result == 0;
-}
-```
-Seluruh perbandingan dieksekusi secara penuh hingga akhir karakter tanpa *early-exit*, memastikan waktu eksekusi selalu konstan identik terlepas dari letak perbedaan karakter.
+### 2. Penyimpanan Kredensial Hardware-Backed (`FlutterSecureStorage`)
+Seluruh data sensitif terkait PIN dipindahkan dari `SharedPreferences` biasa ke **`FlutterSecureStorage`** yang dilindungi oleh hardware enkripsi OS (Android Keystore dengan `encryptedSharedPreferences: true` dan iOS Keychain):
+* `astrack_user_pin_hash`: Hash biner 64 karakter hex.
+* `astrack_user_pin_salt`: Garam acak 16-byte hex.
+* `astrack_pin_iterations`: Jumlah putaran kalkulasi (100.000).
+* `astrack_pin_failed_attempts`: Penghitung kesalahan input PIN.
+* `astrack_pin_lockout_until`: Stempel waktu lockout.
 
-### 3. Migrasi Garam Transparan Tanpa Friksi (Zero-Cost Salt Migration)
-* Sistem mengenali secara otomatis apakah hash PIN yang tersimpan di storage lokal masih berformat legacy (string hex SHA-256 64-karakter).
-* Saat pengguna memasukkan PIN yang benar, sistem memvalidasi PIN terhadap hash lama dengan secret salt, kemudian seketika meng-upgrade hash tersebut ke format baru PBKDF2-HMAC-SHA256 10.000 iterasi dengan garam acak 16-byte baru.
-* Migrasi berjalan mulus di latar belakang (*background upgrade*) tanpa memaksa pengguna menginput ulang atau mengganti PIN mereka.
+### 3. Migrasi Transparan Format Lama (Zero-Friction Migration)
+* Saat `SecurityService.init()` berjalan, sistem mendeteksi apakah terdapat hash atau plaintext lama di `SharedPreferences`.
+* Data lama otomatis dipindahkan ke `FlutterSecureStorage` dan dihapus dari `SharedPreferences`.
+* Saat verifikasi PIN berhasil, jika terdeteksi iterasi versi lama (10.000 iterasi atau legacy SHA-256), sistem seketika meng-upgrade hash secara otomatis (*seamless background re-hash*) ke standar 100.000 iterasi dengan garam baru.
+
+### 4. Eliminasi Serangan Waktu (Constant-Time String Comparison)
+Perbandingan hash diverifikasi menggunakan metode waktu konstan `_constantTimeEquals` tanpa *early-exit*, menepis serangan analisis waktu (*timing side-channel attacks*).
 
 ---
 
 # 80. Arsitektur Pembayaran Terisolasi Edge Gateway (Zero-Secret Client & Edge Functions)
 
-* **Berkas Sumber**: `lib/services/payment/edge_gateway_payment_service.dart`, `lib/services/payment/payment_gateway_config_service.dart`
-* **Fungsi Edge Cloud**: `supabase/functions/gateway-initiate/`, `supabase/functions/gateway-verify/`
+* **Berkas Sumber Klien**: `lib/services/payment/payment_service.dart`, `lib/services/payment/payment_models.dart`, `lib/services/payment/payment_gateway_config_service.dart`, `lib/services/payment/manual_qris_service.dart`
+* **Edge Function Server**: `supabase/functions/payment-webhook/index.ts` & `supabase/functions/payment-webhook/README.md`
+* **Test Suite Terverifikasi**: `test/phase5_payment_gateway_architecture_test.dart` (17 Tests, 100% Pass) & `test/payment_architecture_test.dart` (4 Tests, 100% Pass)
 
-### 1. Prinsip Zero-Secret Client (OWASP MASVS Compliance)
-Mengikuti standar keamanan aplikasi mobile finansial **OWASP Mobile Application Security Verification Standard (MASVS)**, aplikasi klien ASTRACK dilarang keras menyimpan kunci rahasia (*secret key*) gateway komersial (Midtrans Server Key, Xendit Secret Key, Stripe Restricted Key) di dalam kode biner Android/iOS:
-* Kunci rahasia gateway diisolasi secara ketat di lingkungan server aman (*Supabase Vault / Environment Secrets*).
-* Aplikasi mobile hanya bertindak sebagai inisiator pesanan yang terotentikasi token JWT GoTrue.
+### 1. Prinsip Zero-Secret Client (Kepatuhan OWASP MASVS)
+Aplikasi mobile klien ASTRACK dirancang dengan arsitektur **Zero-Secret Client**:
+* Kunci rahasia gateway (`MIDTRANS_SERVER_KEY`, `PAYMENT_WEBHOOK_SECRET`) **DILARANG KERAS** disimpan atau di-bundle di dalam kode biner Android/iOS.
+* Seluruh rahasia server dikonfigurasi melalui Supabase Vault atau Environment Secrets (`supabase secrets set`).
+* Layar konfigurasi admin pada aplikasi mobile (`AdminGatewayConfigScreen`) tidak menampilkan input teks rahasia server, melainkan kartu status perlindungan arsitektur Zero-Secret.
 
-### 2. Alur Pembayaran Terisolasi Serverless Edge Functions
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Pengguna Mobile
-    participant App as ASTRACK App Client
-    participant Edge as Supabase Edge Function (gateway-initiate)
-    participant PG as PostgreSQL (RPC / Plans Table)
-    participant GW as Payment Gateway (Midtrans / Xendit / Stripe)
-
-    User->>App: Pilih Paket Langganan & Kupon
-    App->>Edge: POST /gateway-initiate (JWT, PlanID, CouponCode)
-    Edge->>PG: Validasi Harga Server-Side & Kupon
-    Edge->>GW: Inisiasi Transaksi Menggunakan Server Secret Key
-    GW-->>Edge: Snap Token / Invoice URL
-    Edge-->>App: {success: true, checkout_url, token}
-    App->>User: Buka Halaman Checkout Resmi Gateway
-    GW->>Edge: Webhook Notifikasi Pembayaran (HMAC Verified)
-    Edge->>PG: RPC redeem_coupon_order & activate_subscription
-```
-
-### 3. Kepatuhan Standar Industri & Redundansi Mode
-* **PCI-DSS Level Isolation**: Menghindari transmisi data kartu kredit mentah melalui perangkat mobile.
-* **Fallback Gateway Config**: Jika Edge Function dalam mode offline/testing lokal, konfigurasi dapat diarahkan secara aman ke gateway simulasi terverifikasi.
+### 2. Supabase Edge Function `payment-webhook`
+Endpoint serverless Deno TypeScript resmi `payment-webhook` bertindak sebagai penerima tunggal webhook callback pembayaran:
+1. **Mitigasi Serangan Replay (5-Minute Window)**: Stempel waktu transaksi diverifikasi berada dalam rentang toleransi $\le 300\text{ detik}$ (5 menit).
+2. **Verifikasi Kriptografis Multi-Gateway**:
+   * **Midtrans**: Memvalidasi signature `SHA512(order_id + status_code + gross_amount + ServerKey)`.
+   * **Xendit / Custom HMAC**: Memvalidasi header signature terhadap `HMAC-SHA256(Secret, rawBody)`.
+3. **Idempotensi Transaksi (`public.payment_webhook_events`)**:
+   Memeriksa kunci unik `event_id` sebelum memproses. Panggilan duplikat langsung direspons `200 OK (idempotent duplicate)` tanpa mutasi ganda.
+4. **Pembaruan Status & Aktivasi Paket Otomatis**:
+   Mengubah status `payment_orders` menjadi `approved` dan memperpanjang masa aktif paket langganan pengguna di tabel `subscriptions` selama 30 hari.
 
 ---
 
 # 81. Integritas Finansial & Audit Uang Bilangan Bulat (Integer-Safe Currency Formatting)
 
 * **Berkas Sumber**: `lib/core/utils/currency_formatter.dart`, `lib/data/storage/storage_service.dart`, `lib/models/transaction_item.dart`
+* **Dokumen Rencana Arsitektur**: `docs/integer_currency_migration_plan.md`
+* **Test Suite Terverifikasi**: `test/phase3_security_hardening_test.dart` (Test 5 & 6, 100% Pass)
 
 ### 1. Eliminasi Floating-Point Roundoff Bug
-Mata uang Rupiah Indonesia (IDR) secara inheren beroperasi pada satuan penuh (tanpa sen pecahan desimal dalam transaksi kas nyata). Penyimpanan dan formatting nominal finansial berbasis bilangan desimal pecahan IEEE 754 rentan menimbulkan galat pembulatan halus (misal `0.1 + 0.2 = 0.30000000000000004`):
-* `CurrencyFormatter.format()` membulatkan nominal secara matematis ke bilangan bulat (`roundToInt()`), menjamin tampilan Rupiah selalu bersih, presisi, dan bebas residu pecahan ganjil.
-* Seluruh operasi saldo dompet rekening (*fund sources*) dihitung dengan mekanisme integer-safe arithmetic sebelum ditulis ke storage lokal dan database cloud.
+Mata uang Rupiah Indonesia (IDR) beroperasi pada satuan bilangan bulat penuh tanpa pecahan sen.
+* `CurrencyFormatter.format()` membulatkan nominal secara matematis ke bilangan bulat (`roundToInt()`), menjamin tampilan Rupiah selalu bersih, presisi, dan bebas residu pecahan ganjil (`Rp 25.000` bukannya `Rp 25.000,0000000004`).
+* Properti `TransactionItem.amountInt` menyediakan akses nominal bulat langsung untuk kebutuhan kalkulasi deterministik.
 
 ### 2. Prinsip Zero-Floor & Sanitasi Input Uang
 * **Aturan Batas Bawah Nol (*Zero-Floor Rule*)**: Nilai harga paket langganan, nominal diskon, dan saldo minimal dibatasi tidak boleh menghasilkan angka negatif:
   $$\text{FinalPrice} = \max(0, \text{OriginalPrice} - \text{Discount})$$
 * **Sanitasi Karakter Input**: Karakter non-numerik (titik pemisah, spasi, simbol mata uang) disaring secara deterministik saat pengguna mengetikkan nominal, mencegah eksepsi konversi angka (*FormatException*).
+
+### 3. Rencana Migrasi Masa Depan Menuju Objek Nilai `Money`
+Telah disusun rencana migrasi tertulis pada berkas `docs/integer_currency_migration_plan.md` yang merinci spesifikasi `Money` Value Object immutabel, strategi dual-write kolom `BIGINT` di PostgreSQL tanpa downtime, dan penghapusan menyeluruh tipe primitif `double` pada siklus pengembangan berikutnya.
 
 ---
 
@@ -1835,11 +1834,11 @@ Hasil audit verifikasi: **ZERO RENDERFLEX OVERFLOWS (0 pixels error)** di seluru
 | Aspek / Keterbatasan | Dampak Sistem | Strategi Mitigasi Terimplementasi |
 |---|---|---|
 | **Distribusi Khusus Android** | Pengguna iOS belum dapat memasang aplikasi di luar App Store/TestFlight. | Arsitektur disiapkan universal (Dart/Flutter); rilis PWA offline-first dijadwalkan pada roadmap web. |
-| **Pembaruan APK Mandiri (OTA)** | Pengguna tidak menerima pembaruan latar belakang otomatis dari Play Store. | Layanan `AppUpdateService` dengan notifikasi berkala, dialog pembaruan opsional, dan penegakan `min_supported_build` (Force Update). |
+| **Pembaruan APK Mandiri (OTA)** | Pengguna tidak menerima pembaruan latar belakang otomatis dari Play Store. | Layanan `AppUpdateService` dengan notifikasi berkala, dialog pembaruan opsional, dan penegakan `min_supported_build` (Force Update) via tautan Telegram resmi di peramban eksternal. |
 | **Keterbatasan Force Update Luring** | Saat perangkat offline tanpa internet, pemeriksaan versi server tidak dapat dilakukan. | Prinsip *Offline-First* dipertahankan: pencatatan kas lokal tetap aman, namun sinkronisasi mutasi ke Supabase Cloud ditolak oleh server jika versi klien kedaluwarsa. |
 | **Peringatan Sumber Tidak Dikenal (Play Protect)** | Pengguna pemula mungkin ragu saat memasang berkas APK dari Telegram/WhatsApp. | Panduan instalasi langkah-demi-langkah, publikasi sidik jari sertifikat rilis SHA-256 di menu *Tentang Aplikasi*, dan verifikasi hash biner terbuka. |
-| **Keamanan Keystore Tunggal** | Jika berkas keystore rilis hilang, pengguna harus uninstall aplikasi (risiko kehilangan data lokal). | Keystore diamankan di luar repositori dengan backup berlapis terenkripsi; backup data mandiri (Export JSON) disediakan di menu Privasi & Data. |
-| **Paket Tambahan Lanjutan Belum Native** | Fitur cetak PDF dan sensor sidik jari beroperasi dengan engine internal/PIN fallback. | Tandai status secara transparan sebagai `[PARTIAL]` di inventaris arsitektur hingga plugin native dipasang pada siklus rilis berikutnya. |
+| **Crash Reporting Berstatus `[PARTIAL]`** | Galat crash lokal dicatat dalam preferensi, namun belum ditransmisikan ke server terpusat. | Disajikan tombol interaktif *Laporkan Masalah* via Telegram/Email berformat versi aplikasi otomatis, dan direncanakan integrasi SDK Sentry opt-in. |
+| **Pengujian Probe Live Cloud Supabase** | Memerlukan kredensial aktif melalui `--dart-define` untuk dieksekusi secara live. | Diatur auto-skip secara cerdas (`skip: ...`) saat variabel lingkungan tidak diset, sehingga `flutter test` lokal dapat berjalan tanpa ketergantungan jaringan. |
 
 ### 2. Roadmap Pengembangan Selanjutnya (Future Strategic Roadmap)
 
@@ -1848,10 +1847,11 @@ Hasil audit verifikasi: **ZERO RENDERFLEX OVERFLOWS (0 pixels error)** di seluru
 2. **Integrasi Hardware Biometrik Native (`local_auth`)**:
    Menambahkan pemindaian sidik jari (*Fingerprint*) dan Face ID perangkat keras sebagai opsi pembuka kunci cepat mendampingi KDF PIN PBKDF2-HMAC-SHA256.
 3. **Penyebaran Live Supabase Edge Function untuk Gateway Pembayaran**:
-   Menyebarkan kode skeleton `payment-webhook` ke runtime Deno Edge Function Supabase untuk memproses callback webhook live Midtrans dan Xendit secara terisolasi tanpa rahasia klien.
+   Menyebarkan kode skeleton `supabase/functions/payment-webhook/index.ts` ke runtime Deno Edge Function Supabase untuk memproses callback webhook live Midtrans dan Xendit secara terisolasi tanpa rahasia klien.
 4. **Pemasangan Plugin Native PDF & Thermal Bluetooth Printer**:
    Menyematkan pustaka `pdf: ^3.x` dan `printing` untuk pencetakan struk kasir mikro langsung ke printer thermal nirkabel bagi pelaku UMKM.
-5. **Observabilitas Cloud Terpusat (Sentry / Crashlytics)**:
+5. **Observabilitas Cloud Terpusat (Sentry Opt-In)**:
    Mengintegrasikan SDK Sentry dengan flag opt-in privasi bawaan untuk merekam telemetri galat secara anonim tanpa data PII/keuangan.
+
 
 

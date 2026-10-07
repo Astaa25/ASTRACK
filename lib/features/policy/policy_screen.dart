@@ -173,11 +173,12 @@ class _PolicyScreenState extends State<PolicyScreen> {
                               ? '3. Ketentuan Langganan & Kebijakan Refund (Pengembalian Dana)'
                               : '3. Subscription Terms & Refund Policy',
                           body: isIndonesian
-                              ? '''• Lisensi Pro/Ultimate terikat pada akun Anda dan berlaku selama durasi paket yang dipilih.
-• TODO: [LEGAL_REVIEW] Permohonan pengembalian dana (refund) dapat diajukan dalam kurun waktu 7 (tujuh) hari kalender sejak tanggal transaksi pembayaran jika terjadi kesalahan teknis sistem, kegagalan aktivasi fitur, atau pendebitan ganda.
-• Pengajuan refund dapat dilakukan dengan menyertakan bukti transfer / Invoice ID ke kanal dukungan resmi kami di bawah ini.''': '''• Pro/Ultimate subscriptions are tied to your account and valid for the billing period.
-• TODO: [LEGAL_REVIEW] Refund requests may be submitted within 7 (seven) calendar days of transaction for system technical failures or duplicate charges.
-• Contact our official support channels below with your Order ID to initiate a request.''',
+                              ? '''• Lisensi langganan terikat pada akun Anda dan berlaku selama durasi paket yang dipilih.
+• TODO: [LEGAL_REVIEW] Kebijakan pengembalian dana (refund) resmi sedang dalam peninjauan tim legal.
+• Untuk kendala teknis atau pertanyaan transaksi, hubungi saluran dukungan resmi kami di bawah ini.'''
+                              : '''• Subscriptions are tied to your account and valid for the billing period.
+• TODO: [LEGAL_REVIEW] Official refund policy pending legal review.
+• For payment inquiries or technical issues, please contact our official support channels below.''',
                           isDark: isDark,
                         ),
 
