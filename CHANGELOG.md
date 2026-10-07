@@ -20,7 +20,7 @@ Seluruh riwayat perubahan, pembaruan versi, dan catatan rilis resmi aplikasi AST
   * Saluran Bantuan Pengguna & Kebijakan Transaksi: Tautan email bantuan resmi (`support@astrack.app`) dan Telegram di `PolicyScreen` dan `AboutScreen`. Ketentuan pengembalian dana ditandai dengan `[TODO: Kebijakan refund resmi menunggu peninjauan tim legal]`.
 * **Hardening Kriptografis Tingkat Tinggi (Cryptographic Hardening)**:
   * Peningkatan mekanisme hashing PIN lokal menjadi **PBKDF2-HMAC-SHA256 $\ge 100.000$ iterasi** yang dieksekusi di background isolate via `compute()` guna mencegah pembekuan antarmuka utama (UI thread).
-  * Pemindahan hash, garam acak dinamis 16-byte (`Random.secure()`), penghitung kegagalan (*failed attempts*), dan status *lockout* ke **`FlutterSecureStorage`** (terenkripsi hardware-backed Android Keystore / iOS Keychain).
+  * Pemindahan hash, garam acak dinamis 16-byte (`Random.secure()`), penghitung kegagalan (*failed attempts*), dan status *lockout* ke **`FlutterSecureStorage`** (terenkripsi hardware-backed Android Keystore).
   * Migrasi transparan tanpa hambatan dari format lama (plaintext SharedPreferences atau hash legacy) ke format aman 100.000 iterasi di `FlutterSecureStorage`.
   * Proteksi serangan berbasis waktu (*Anti-Timing Attack*) menggunakan perbandingan waktu-konstan `_constantTimeEquals`.
   * Arsitektur Pembayaran Terisolasi Edge Gateway (*Zero-Secret Client*): Dibuat skeleton Supabase Edge Function `payment-webhook` dengan HMAC SHA-512/SHA-256, jendela toleransi replay 5 menit, dan idempotensi `payment_webhook_events`. Klien aplikasi bersih dari `webhookSecret` dan server key.

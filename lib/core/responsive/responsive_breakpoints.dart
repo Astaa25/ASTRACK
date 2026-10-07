@@ -8,7 +8,7 @@ enum WindowSizeClass {
   /// Phone landscape, small tablet portrait, foldable unfolded (600 - 840 dp)
   medium,
 
-  /// Tablet landscape, iPad, Desktop (> 840 dp)
+  /// Tablet landscape, Desktop (> 840 dp)
   expanded,
 }
 

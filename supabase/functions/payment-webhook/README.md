@@ -3,7 +3,7 @@
 ## 1. Ikhtisar Arsitektur Zero-Secret Client (OWASP MASVS)
 Fungsi Edge ini merupakan titik masuk tunggal (*Single Source of Truth*) yang memproses seluruh callback dan webhook pembayaran dari gateway komersial (Midtrans, Xendit, dsb.) secara terisolasi di sisi server (Deno runtime).
 
-Kode biner aplikasi mobile klien (Android/iOS) **DILARANG KERAS** memuat atau menyimpan kunci rahasia server (`MIDTRANS_SERVER_KEY`, `XENDIT_SECRET_KEY`, atau webhook secrets).
+Kode biner aplikasi klien Android **DILARANG KERAS** memuat atau menyimpan kunci rahasia server (`MIDTRANS_SERVER_KEY`, `XENDIT_SECRET_KEY`, atau webhook secrets).
 
 ## 2. Manajemen Rahasia (Secrets via Supabase Vault / Environment)
 

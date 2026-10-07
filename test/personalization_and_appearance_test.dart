@@ -403,7 +403,7 @@ void main() {
       expect(find.text('Tinjau'), findsNothing);
     });
 
-    testWidgets('Tablet/iPad responsive layout renders two panes', (tester) async {
+    testWidgets('Tablet responsive layout renders two panes', (tester) async {
       tester.view.physicalSize = const Size(1024, 1366);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {

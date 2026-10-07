@@ -116,7 +116,7 @@ void main() {
         ),
       );
 
-      // 3. iPad landscape / Desktop: 1100x800 (>840) -> Expanded
+      // 3. Tablet landscape / Desktop: 1100x800 (>840) -> Expanded
       await tester.pumpWidget(
         MediaQuery(
           data: const MediaQueryData(size: Size(1100, 800)),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'responsive_breakpoints.dart';
 
-/// Container that prevents content from stretching excessively on large screens (Tablets, iPad, Desktop)
+/// Container that prevents content from stretching excessively on large screens (Tablets, Desktop)
 class AdaptiveContainer extends StatelessWidget {
   final Widget child;
   final double? maxWidth;

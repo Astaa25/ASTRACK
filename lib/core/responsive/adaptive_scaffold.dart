@@ -58,7 +58,7 @@ class AdaptiveNavigationScaffold extends StatelessWidget {
       );
     }
 
-    // Tablet / iPad / Desktop layout with NavigationRail
+    // Tablet / Desktop layout with NavigationRail
     return Scaffold(
       appBar: appBar,
       body: Row(

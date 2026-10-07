@@ -106,11 +106,11 @@
 * **Versi Rilis**: 1.0.0 (Build 1)
 * **Copyright**: © 2026 ASTRACK. All rights reserved.
 * **Tujuan Strategis**: Memberikan solusi holistik pengelolaan aset dan arus kas pribadi maupun bisnis mikro dalam satu aplikasi multi-platform yang cepat, privat, indah, dan deterministik. Menggabungkan pencatatan multi-rekening (*multi-wallet*), perencanaan anggaran dinamis (*budgeting*), komitmen masa depan (*savings goals*), tagihan berkala (*recurring bills*), integrasi kecerdasan buatan (*AI Financial Advisor & OCR Vision*), gerbang pembayaran multi-channel (*Midtrans, Xendit, Stripe, Manual QRIS*), serta panel kontrol administrasi SaaS (*Super Admin Dashboard*).
-* **Platform Target**: **Android saja** (Kanal distribusi resmi mandiri berupa berkas `.apk` via Telegram & WhatsApp). Web dan Windows Desktop tetap dapat dikompilasi untuk pratinjau pengembangan, namun pemindai nota OCR on-device (`google_mlkit_text_recognition`) secara eksklusif hanya didukung pada platform mobile native (Android & iOS).
+* **Platform Target**: **Android saja** (Kanal distribusi resmi mandiri berupa berkas `.apk` via Telegram & WhatsApp). Web dan Windows Desktop hanya digunakan oleh pengembang untuk kebutuhan pratinjau pengembangan (bukan target pengguna). Pemindai nota OCR on-device (`google_mlkit_text_recognition`) didukung pada platform target Android. Platform iOS tidak didukung.
 * **Teknologi Utama**:
   - **Client**: Flutter SDK 3.x, Dart 3.x, Provider Pattern (`ChangeNotifier`), Google Fonts (`Plus Jakarta Sans`), FL Chart Engine.
   - **Cloud Backend**: Supabase Cloud Enterprise Engine (PostgreSQL 15+), GoTrue Authentication REST Service, Row Level Security (RLS), PL/pgSQL Stored Procedures / RPC (`SECURITY DEFINER`).
-  - **Local Persistence**: `SharedPreferences` (Penyimpanan lokal sandboxed aplikasi standar, tidak terenkripsi otomatis di level OS; kredensial sensitif PIN diamankan secara mandiri menggunakan **PBKDF2-HMAC-SHA256 10.000 iterasi** dengan *random per-device salt* 16-byte), JSON Serialization deterministik, dan in-memory reactive state cache.
+  - **Local Persistence**: `SharedPreferences` (Penyimpanan lokal sandboxed aplikasi standar, tidak terenkripsi otomatis di level OS; kredensial sensitif PIN diamankan secara mandiri menggunakan **PBKDF2-HMAC-SHA256 100.000 iterasi** dengan *random per-device salt* 16-byte di `FlutterSecureStorage`), JSON Serialization deterministik, dan in-memory reactive state cache.
 * **Tingkat Kesiapan (QA Level)**: **Beta Terbuka / Rilis Mandiri (Self-Hosted APK Distribution via Telegram/WhatsApp)**. Didukung **31 berkas pengujian otomatis** dengan **290 tests lulus 100% (0 fail, 0 flaky)**, serta **0 issues / 0 warnings** pada `flutter analyze`. Telah lulus audit visual anti-overflow pada resolusi ultra-kompak 320dp & 360dp.
 
 ### 1.1 Asal-Usul, Filosofi & Fungsi Nama "ASTRACK"
@@ -139,7 +139,7 @@ ASTRACK menempati irisan strategis dari beberapa kategori perangkat lunak modern
 3. **Berdasarkan Paradigma Rekayasa Perangkat Lunak**:
    - **Offline-First Cloud-Synchronized Architecture**: Aplikasi berfungsi 100% secara lokal tanpa jeda (*zero latency*) saat tidak ada sinyal internet, lalu secara otomatis menyinkronkan antrean mutasi kas ke cloud database PostgreSQL saat konektivitas kembali pulih.
    - **Deterministic Ledger Engine**: Menolak pendekatan pencatatan kas ceroboh. Saldo adalah hasil agregasi deterministik dari rantai transaksi mutasi nyata dengan mekanisme pembalikan saldo atomik (*double-step atomic balance reversal*).
-   - **Universal Cross-Platform Hybrid**: Satu basis kode (*single codebase*) Dart/Flutter yang mampu dikompilasi menjadi Android APK/AAB native, iOS binary, Progressive Web App (PWA) di browser desktop/mobile, dan aplikasi desktop Windows.
+   - **Arsitektur Khusus Android**: Basis kode Flutter teroptimasi khusus untuk platform Android native. Web dan Windows Desktop hanya digunakan oleh pengembang untuk kebutuhan pratinjau pengembangan (bukan target pengguna). Platform iOS tidak didukung.
 
 ### 1.3 Konsep & Filosofi Desain (UI/UX Design Philosophy & Visual Language)
 Desain antarmuka ASTRACK dirancang dengan standar agensi desain papan atas (*High-End Editorial Luxury Fintech*) yang menolak pola-pola generik murahan (*anti-slop design*):
@@ -155,7 +155,7 @@ Desain antarmuka ASTRACK dirancang dengan standar agensi desain papan atas (*Hig
    - Seluruh teks dan angka menggunakan Google Fonts *Plus Jakarta Sans*. Font sans-serif geometris modern ini dipilih karena memiliki proporsi angka tabular yang sangat jelas, kerning yang proporsional, serta keterbacaan (*legibility*) yang luar biasa baik pada ukuran kecil 10sp maupun display banner 28sp.
 3. **Struktur Tata Letak Bento Grid**:
    - Mengadaptasi tata letak bento box modular modern: informasi dikelompokkan dalam modul-modul kartu mandiri dengan radius sudut proporsional (16–20dp), border halus bergradien tembus pandang (*subtle translucent glassmorphism*), dan bayangan difus lembut (*soft diffused shadows*). Tidak ada tumpukan kartu yang saling bertabrakan.
-4. **Mikro-Interaksi & Motion Feedback Fisik (Apple-Grade Physics)**:
+4. **Mikro-Interaksi & Motion Feedback Fisik (Fluid Motion Physics)**:
    - Menghilangkan tooltip web standar yang mengganggu tampilan visual.
    - Menerapkan efek umpan balik penekanan (*press-down scale feedback*) dan overlay gelap lembut saat tombol disentuh.
    - Indikator pemuatan menggunakan animasi shimmer skeleton elegan dan transisi modal bottom sheet bermekanisme pegas (*spring curve*).
@@ -1589,12 +1589,12 @@ ASTRACK menggabungkan performa tinggi kompilasi native Flutter dengan keandalan 
 
 | Nama Package / Library | Versi | Peran & Tanggung Jawab Spesifik di ASTRACK | Alasan Pemilihan Arsitektur |
 |---|---|---|---|
-| `flutter` | `SDK` | Fondasi framework aplikasi native universal | Satu basis kode untuk Android, iOS, Web, dan Windows |
+| `flutter` | `SDK` | Fondasi framework aplikasi native Android | Basis kode utama teroptimasi untuk Android (Web/Windows hanya untuk pratinjau pengembang) |
 | `flutter_localizations` | `SDK` | Penyedia data format kalender, translasi bawaan, dan mata uang | Mendukung formatting standar Bahasa Indonesia (`id_ID`) |
 | `provider` | `^6.1.5+1` | State management reaktif (`FinanceProvider`, `ThemeProvider`) | Ringan, hemat memori, dan efisien tanpa overhead |
 | `intl` | `^0.20.3` | Format nominal mata uang (`NumberFormat.currency`) dan tanggal | Format presisi Rupiah bertitik (`Rp 25.000`) dan kalender lokal |
 | `shared_preferences` | `^2.5.5` | Penyimpanan persisten lokal sandboxed aplikasi (tidak terenkripsi otomatis di level OS) | Menopang arsitektur *offline-first* dengan pembacaan seketika |
-| `flutter_secure_storage` | `^10.3.4` | Penyimpanan kredensial sensitif terenkripsi hardware-backed (Android Keystore / iOS Keychain) | Mengamankan hash PIN, dynamic salt, dan counter lockout dari ekstraksi root/adb |
+| `flutter_secure_storage` | `^10.3.4` | Penyimpanan kredensial sensitif terenkripsi hardware-backed (Android Keystore) | Mengamankan hash PIN, dynamic salt, dan counter lockout dari ekstraksi root/adb |
 | `fl_chart` | `^1.2.0` | Mesin perender grafik data finansial (Pie, Donut, Bar, Dual-Line) | Visualisasi interaktif performa tinggi dengan animasi mulus |
 | `google_fonts` | `^8.2.1` | Pustaka tipografi font *Plus Jakarta Sans* | Keterbacaan angka finansial tinggi dan estetika editorial |
 | `uuid` | `^4.6.0` | Generator identifier unik UUID v4 (`RFC 4122`) | Primary key acak terdistribusi tanpa bentrok ID antar-perangkat |
@@ -1602,10 +1602,10 @@ ASTRACK menggabungkan performa tinggi kompilasi native Flutter dengan keandalan 
 | `supabase_flutter` | `^2.18.0` | SDK resmi Supabase (Auth GoTrue, Database Client, RPC) | Manajemen sesi JWT, query PostgreSQL, dan Stored Procedures |
 | `crypto` | `^3.0.6` | Algoritma hashing kriptografis SHA-256, HMAC, dan PBKDF2 | KDF PIN 100.000 iterasi dan verifikasi signature webhook |
 | `image_picker` | `^1.2.3` | Antarmuka interaksi hardware kamera dan galeri foto | Pengambilan berkas gambar foto nota/struk belanja |
-| `google_mlkit_text_recognition`| `^0.17.1` | Model Machine Learning on-device untuk ekstraksi teks OCR | Pembacaan leksikal teks kuitansi secara offline (Android/iOS) |
+| `google_mlkit_text_recognition`| `^0.17.1` | Model Machine Learning on-device untuk ekstraksi teks OCR | Pembacaan leksikal teks kuitansi secara offline (Android) |
 | `package_info_plus` | `^8.2.1` | Pembaca metadata versi aplikasi (`versionName`, `buildNumber`) | Deteksi pembaruan OTA mandiri dan info rilis pada About |
 | `url_launcher` | `^6.3.1` | Peluncur tautan eksternal (Telegram, WhatsApp, Web, Unduhan) | Whitelist host HTTPS resmi untuk update dan bantuan |
-| `cupertino_icons` | `^1.0.8` | Pustaka ikon vektor Apple Cupertino | Pelengkap ikon antarmuka iOS hybrid |
+| `cupertino_icons` | `^1.0.8` | Pustaka ikon vektor pelengkap | Pelengkap simbol ikon antarmuka Flutter |
 | `flutter_test` | `SDK Dev` | Mesin pengujian otomatis unit, widget, dan integrasi | Menguji **31 berkas pengujian / 298 definisi uji (100% Pass / Auto-skip)** |
 | `flutter_lints` | `^6.0.0 Dev` | Analisis statis aturan penulisan kode bersih resmi Dart | Memastikan 0 error dan 0 warning pada `flutter analyze` |
 
@@ -1736,7 +1736,7 @@ ASTRACK mengamankan PIN 6-digit pengguna menggunakan algoritma derivasi kunci st
 * **Garam Dinamis Acak Per-Perangkat**: Garam kriptografis acak 16-byte (`128-bit` / 32 hex chars) dihasilkan menggunakan `Random.secure()`.
 
 ### 2. Penyimpanan Kredensial Hardware-Backed (`FlutterSecureStorage`)
-Seluruh data sensitif terkait PIN dipindahkan dari `SharedPreferences` biasa ke **`FlutterSecureStorage`** yang dilindungi oleh hardware enkripsi OS (Android Keystore dengan `encryptedSharedPreferences: true` dan iOS Keychain):
+Seluruh data sensitif terkait PIN dipindahkan dari `SharedPreferences` biasa ke **`FlutterSecureStorage`** yang dilindungi oleh hardware enkripsi OS (Android Keystore dengan `encryptedSharedPreferences: true`):
 * `astrack_user_pin_hash`: Hash biner 64 karakter hex.
 * `astrack_user_pin_salt`: Garam acak 16-byte hex.
 * `astrack_pin_iterations`: Jumlah putaran kalkulasi (100.000).
@@ -1761,7 +1761,7 @@ Perbandingan hash diverifikasi menggunakan metode waktu konstan `_constantTimeEq
 
 ### 1. Prinsip Zero-Secret Client (Kepatuhan OWASP MASVS)
 Aplikasi mobile klien ASTRACK dirancang dengan arsitektur **Zero-Secret Client**:
-* Kunci rahasia gateway (`MIDTRANS_SERVER_KEY`, `PAYMENT_WEBHOOK_SECRET`) **DILARANG KERAS** disimpan atau di-bundle di dalam kode biner Android/iOS.
+* Kunci rahasia gateway (`MIDTRANS_SERVER_KEY`, `PAYMENT_WEBHOOK_SECRET`) **DILARANG KERAS** disimpan atau di-bundle di dalam kode biner aplikasi klien Android.
 * Seluruh rahasia server dikonfigurasi melalui Supabase Vault atau Environment Secrets (`supabase secrets set`).
 * Layar konfigurasi admin pada aplikasi mobile (`AdminGatewayConfigScreen`) tidak menampilkan input teks rahasia server, melainkan kartu status perlindungan arsitektur Zero-Secret.
 
@@ -1805,7 +1805,7 @@ Telah disusun rencana migrasi tertulis pada berkas `docs/integer_currency_migrat
 * **Test Suite Terverifikasi**: `test/pixel_overflow_audit_test.dart` (27 Layar & Modal, 100% Pass) & `test/pixel_overflow_hardening_test.dart` (4 Tests, 100% Pass)
 
 ### 1. Metodologi Audit Stres Viewport 320x568 dp
-Untuk memastikan antarmuka ASTRACK tampil sempurna pada seluruh spektrum perangkat keras Android dan iOS lama—termasuk layar ultra-kompak dengan lebar fisik hanya **320dp** (seperti iPhone SE generasi ke-1, perangkat Android Go, atau perangkat dengan skala font aksesibilitas besar)—dibuat audit uji otomatis komprehensif yang menguji **27+ layar dan dialog modal**:
+Untuk memastikan antarmuka ASTRACK tampil sempurna pada seluruh spektrum perangkat keras Android—termasuk layar ultra-kompak dengan lebar fisik hanya **320dp** (seperti perangkat Android entry-level/Android Go atau perangkat dengan skala font aksesibilitas besar)—dibuat audit uji otomatis komprehensif yang menguji **27+ layar dan dialog modal**:
 * Login, Register, Forgot Password, Reset Password, Onboarding
 * Dashboard, Statistik, Transaksi, Anggaran (Budget), Target Tabungan (Savings)
 * Sumber Dana (Sources), Tagihan Rutin (Recurring), Impor CSV, Scan Struk OCR
@@ -1833,7 +1833,7 @@ Hasil audit verifikasi: **ZERO RENDERFLEX OVERFLOWS (0 pixels error)** di seluru
 
 | Aspek / Keterbatasan | Dampak Sistem | Strategi Mitigasi Terimplementasi |
 |---|---|---|
-| **Distribusi Khusus Android** | Pengguna iOS belum dapat memasang aplikasi di luar App Store/TestFlight. | Arsitektur disiapkan universal (Dart/Flutter); rilis PWA offline-first dijadwalkan pada roadmap web. |
+| **Eksklusivitas Platform Android** | ASTRACK secara tegas hanya dikembangkan untuk ekosistem Android. Platform iOS tidak didukung. | Fokus penuh optimalisasi pengalaman Android native dan kanal distribusi APK mandiri. |
 | **Pembaruan APK Mandiri (OTA)** | Pengguna tidak menerima pembaruan latar belakang otomatis dari Play Store. | Layanan `AppUpdateService` dengan notifikasi berkala, dialog pembaruan opsional, dan penegakan `min_supported_build` (Force Update) via tautan Telegram resmi di peramban eksternal. |
 | **Keterbatasan Force Update Luring** | Saat perangkat offline tanpa internet, pemeriksaan versi server tidak dapat dilakukan. | Prinsip *Offline-First* dipertahankan: pencatatan kas lokal tetap aman, namun sinkronisasi mutasi ke Supabase Cloud ditolak oleh server jika versi klien kedaluwarsa. |
 | **Peringatan Sumber Tidak Dikenal (Play Protect)** | Pengguna pemula mungkin ragu saat memasang berkas APK dari Telegram/WhatsApp. | Panduan instalasi langkah-demi-langkah, publikasi sidik jari sertifikat rilis SHA-256 di menu *Tentang Aplikasi*, dan verifikasi hash biner terbuka. |
@@ -1842,10 +1842,10 @@ Hasil audit verifikasi: **ZERO RENDERFLEX OVERFLOWS (0 pixels error)** di seluru
 
 ### 2. Roadmap Pengembangan Selanjutnya (Future Strategic Roadmap)
 
-1. **Fase Web PWA & Companion Desktop**:
-   Mengaktifkan rilis Progressive Web App (PWA) dengan service worker offline-first dan IndexedDB cache untuk melayani pengguna iPhone/iPad tanpa instalasi toko aplikasi.
+1. **Penyempurnaan Pratinjau Web Pengembang**:
+   Penyempurnaan portal web untuk kebutuhan pratinjau browser dan pengelolaan laporan keuangan desktop.
 2. **Integrasi Hardware Biometrik Native (`local_auth`)**:
-   Menambahkan pemindaian sidik jari (*Fingerprint*) dan Face ID perangkat keras sebagai opsi pembuka kunci cepat mendampingi KDF PIN PBKDF2-HMAC-SHA256.
+   Menambahkan pemindaian sidik jari (*Fingerprint*) perangkat keras Android sebagai opsi pembuka kunci cepat mendampingi KDF PIN PBKDF2-HMAC-SHA256.
 3. **Penyebaran Live Supabase Edge Function untuk Gateway Pembayaran**:
    Menyebarkan kode skeleton `supabase/functions/payment-webhook/index.ts` ke runtime Deno Edge Function Supabase untuk memproses callback webhook live Midtrans dan Xendit secara terisolasi tanpa rahasia klien.
 4. **Pemasangan Plugin Native PDF & Thermal Bluetooth Printer**:
