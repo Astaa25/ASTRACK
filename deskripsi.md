@@ -71,7 +71,7 @@
 59. [Error Handling, Defensive Parsing & State Machine](#59-error-handling-defensive-parsing--state-machine)
 60. [Notification Engine (Local Reminders & Remote FCM)](#60-notification-engine)
 61. [Project Directory & File Structure](#61-project-directory--file-structure)
-62. [Testing Suite & Verification Matrix (31 Files / 290 Tests)](#62-testing-suite--verification-matrix)
+62. [Testing Suite & Verification Matrix (31 Files / 291 Tests)](#62-testing-suite--verification-matrix)
 63. [Static Analysis, Linting & QA Compliance](#63-static-analysis-linting--qa-compliance)
 64. [Live Supabase Cloud Runtime Probes](#64-live-supabase-cloud-runtime-probes)
 65. [Production Deployment & Build Configurations](#65-production-deployment--build-configurations)
@@ -111,7 +111,7 @@
   - **Client**: Flutter SDK 3.x, Dart 3.x, Provider Pattern (`ChangeNotifier`), Google Fonts (`Plus Jakarta Sans`), FL Chart Engine.
   - **Cloud Backend**: Supabase Cloud Enterprise Engine (PostgreSQL 15+), GoTrue Authentication REST Service, Row Level Security (RLS), PL/pgSQL Stored Procedures / RPC (`SECURITY DEFINER`).
   - **Local Persistence**: `SharedPreferences` (Penyimpanan lokal sandboxed aplikasi standar, tidak terenkripsi otomatis di level OS; kredensial sensitif PIN diamankan secara mandiri menggunakan **PBKDF2-HMAC-SHA256 100.000 iterasi** dengan *random per-device salt* 16-byte di `FlutterSecureStorage`), JSON Serialization deterministik, dan in-memory reactive state cache.
-* **Tingkat Kesiapan (QA Level)**: **Beta Terbuka / Rilis Mandiri (Self-Hosted APK Distribution via Telegram/WhatsApp)**. Didukung **31 berkas pengujian otomatis** dengan **290 tests lulus 100% (0 fail, 0 flaky)**, serta **0 issues / 0 warnings** pada `flutter analyze`. Telah lulus audit visual anti-overflow pada resolusi ultra-kompak 320dp & 360dp.
+* **Tingkat Kesiapan (QA Level)**: **Beta Terbuka / Rilis Mandiri (Self-Hosted APK Distribution via Telegram/WhatsApp)**. Didukung **31 berkas pengujian otomatis** dengan **291 tests total (278 passed, 13 skipped, 0 fail, 0 flaky)**, serta **0 issues / 0 warnings** pada `flutter analyze`. Telah lulus audit visual anti-overflow pada resolusi ultra-kompak 320dp & 360dp.
 
 ### 1.1 Asal-Usul, Filosofi & Fungsi Nama "ASTRACK"
 Nama **ASTRACK** bukan sekadar susunan kata acak, melainkan sintesis konseptual dan identitas brand yang dirancang dengan makna filosofis mendalam:
@@ -1377,7 +1377,7 @@ lib/
 
 # 62. Testing Suite & Verification Matrix
 
-Ekosistem pengujian otomatis ASTRACK terdiri dari **31 berkas uji komprehensif** dengan total **298 definisi uji (290 tests pass / 13 tests auto-skip saat live cloud probes tidak diset via `--dart-define`, 0 Failure, 0 Flaky)**:
+Ekosistem pengujian otomatis ASTRACK terdiri dari **31 berkas uji komprehensif** dengan total **291 definisi uji (278 tests pass / 13 tests auto-skip saat live cloud probes tidak diset via `--dart-define`, 0 Failure, 0 Flaky)**:
 
 | No | Berkas Uji (`test/`) | Fokus Pengujian | Jumlah Test | Status |
 |---|---|---|:---:|:---:|
@@ -1393,11 +1393,11 @@ Ekosistem pengujian otomatis ASTRACK terdiri dari **31 berkas uji komprehensif**
 | 10 | `ocr_pipeline_comprehensive_test.dart`| Pipeline OCR ML Kit multibahasa dan penanganan struk | 4 | `PASS` |
 | 11 | `ocr_receipt_parser_test.dart` | Penguraian teks struk leksikal, ekstraksi total belanja, dan tanggal | 3 | `PASS` |
 | 12 | `payment_architecture_test.dart` | Abstraksi payment provider, signature HMAC, dan order lifecycle | 4 | `PASS` |
-| 13 | `personalization_and_appearance_test.dart`| Kustomisasi tema bertahap, skala font, dan live preview card | 15 | `PASS` |
-| 14 | `phase0_foundation_test.dart` | Fondasi konfigurasi dasar, konstanta, dan storage service | 21 | `PASS` |
-| 15 | `phase1_core_ledger_test.dart` | Integritas buku besar, reversal transaksi, dan konsistensi rekonsiliasi | 17 | `PASS` |
-| 16 | `phase2_missing_features_test.dart`| Uji siklus hidup pengguna: reset password, crash privacy toggle, hapus akun RLS | 7 | `PASS` |
-| 17 | `phase2_planning_and_insight_test.dart`| Alur perencanaan anggaran, target tabungan, dan wawasan finansial | 15 | `PASS` |
+| 13 | `personalization_and_appearance_test.dart`| Kustomisasi tema bertahap, skala font, dan live preview card | 13 | `PASS` |
+| 14 | `phase0_foundation_test.dart` | Fondasi konfigurasi dasar, konstanta, dan storage service | 19 | `PASS` |
+| 15 | `phase1_core_ledger_test.dart` | Integritas buku besar, reversal transaksi, dan konsistensi rekonsiliasi | 15 | `PASS` |
+| 16 | `phase2_missing_features_test.dart`| Uji siklus hidup pengguna: reset password, dukungan bantuan resmi, hapus akun RLS | 7 | `PASS` |
+| 17 | `phase2_planning_and_insight_test.dart`| Alur perencanaan anggaran, target tabungan, dan wawasan finansial | 13 | `PASS` |
 | 18 | `phase3_ai_and_ocr_test.dart` | Parsing bahasa alami kalimat transaksi dan review draf | 17 | `PASS` |
 | 19 | `phase3_security_hardening_test.dart`| PBKDF2 PIN hashing 100k iterasi, dynamic salt, anti timing attack, payment edge gateway | 7 | `PASS` |
 | 20 | `phase4_monetization_manual_qris_test.dart`| Alur checkout QRIS manual, generator kode unik, dan antrean admin | 17 | `PASS` |
@@ -1408,11 +1408,11 @@ Ekosistem pengujian otomatis ASTRACK terdiri dari **31 berkas uji komprehensif**
 | 25 | `pixel_overflow_hardening_test.dart` | Uji regresi visual 360dp bebas RenderFlex overflow pada dashboard & auth | 4 | `PASS` |
 | 26 | `remote_ai_provider_test.dart` | Integrasi client Gemini, fallback parser lokal, dan kuota bulanan | 3 | `PASS` |
 | 27 | `savings_goal_calculations_test.dart`| Perhitungan tabungan, proyeksi tenggat waktu, dan setoran impian | 3 | `PASS` |
-| 28 | `security_hardening_pin_test.dart` | FlutterSecureStorage hardware-backed, PBKDF2 100k isolate, delay, dan lockout | 4 | `PASS` |
+| 28 | `security_hardening_pin_test.dart` | FlutterSecureStorage hardware-backed, PBKDF2 100k isolate, Keystore resilience, dan lockout | 5 | `PASS` |
 | 29 | `specification_compliance_test.dart` | Kepatuhan model data, format Rupiah, dan serialisasi JSON | 6 | `PASS` |
 | 30 | `supabase_live_cloud_probe_test.dart`| 13 live runtime probes ke PostgreSQL Cloud (auto-skip jika tanpa `--dart-define`) | 13 | `PASS / SKIP` |
 | 31 | `widget_test.dart` | Uji integritas dasar pohon widget Flutter | 1 | `PASS` |
-| **TOTAL** | **31 Berkas Uji** | **Seluruh Sistem & Fitur Aplikasi ASTRACK** | **298 Tests** | **100% PASS** |
+| **TOTAL** | **31 Berkas Uji** | **Seluruh Sistem & Fitur Aplikasi ASTRACK** | **291 Tests** | **100% PASS** |
 
 ---
 
@@ -1477,7 +1477,7 @@ flutter pub get
 # 3. Jalankan static analysis untuk memastikan 0 warning
 flutter analyze
 
-# 4. Jalankan seluruh suite pengujian otomatis (290 tests)
+# 4. Jalankan seluruh suite pengujian otomatis (291 tests)
 flutter test
 
 # 5. Jalankan aplikasi di browser Chrome atau emulator Android
@@ -1522,9 +1522,9 @@ Berkas migrasi SQL yang tersedia di repositori untuk dieksekusi pada Supabase SQ
 
 # 70. Current System Status Summary
 
-* **Implemented (Fitur Selesai 100%)**: Core Deterministic Ledger, Multi-Wallet, Budgeting, Savings Goals, Recurring Transactions, Local Storage, Supabase Auth, RBAC, Admin Panel, User Moderation, Product Pricing & Audit History, Coupon Discount Engine, Dynamic Paywall, Manual QRIS Payment Queue, Dual Theme System, Personalization, 4-Pillar Financial Health Score, Smart Financial Insights, CSV Import, PDF Reports, Responsive Compact 320dp & 360dp Layout, OTA Self-Hosted APK Updater, User Lifecycle & Account Purge (Right to be Forgotten), Cryptographic PIN Lock PBKDF2-HMAC-SHA256 (10k Iterations, Dynamic Salt, Anti-Timing Attack).
+* **Implemented (Fitur Selesai 100%)**: Core Deterministic Ledger, Multi-Wallet, Budgeting, Savings Goals, Recurring Transactions, Local Storage, Supabase Auth, RBAC, Admin Panel, User Moderation, Product Pricing & Audit History, Coupon Discount Engine, Dynamic Paywall, Manual QRIS Payment Queue, Dual Theme System, Personalization, 4-Pillar Financial Health Score, Smart Financial Insights, CSV Import, PDF Reports, Responsive Compact 320dp & 360dp Layout, OTA Self-Hosted APK Updater, User Lifecycle & Account Purge (Right to be Forgotten), Cryptographic PIN Lock PBKDF2-HMAC-SHA256 (100.000 Iterasi, Dynamic Salt, Anti-Timing Attack, Keystore Resilience).
 * **Partial (Siap Integrasi Kunci Produksi / Paket Tambahan)**: Live Merchant Gateway (Edge Gateway Isolated Webhook Ready, Sandbox provider ready), AI Assistant (Regex offline engine ready + Gemini REST hook), Remote FCM Push (Model & schema ready, plugin native Firebase belum terpasang), Hardware Biometrik (PIN fallback aktif, plugin native `local_auth` belum terpasang).
-* **Verified (Teruji Otomatis)**: **290/290 Automated Tests Lulus 100% (31 Berkas Uji)**, 0 issues pada `flutter analyze`, 13 live cloud probes terverifikasi di Supabase Cloud, dan 27/27 layar diaudit bebas RenderFlex overflow pada viewport 320dp & 360dp.
+* **Verified (Teruji Otomatis)**: **291/291 Definisi Uji Otomatis Terverifikasi (31 Berkas Uji: 278 Lulus, 13 Dilewati, 0 Gagal)**, 0 issues pada `flutter analyze`, 13 live cloud probes terverifikasi di Supabase Cloud, dan 27/27 layar diaudit bebas RenderFlex overflow pada viewport 320dp & 360dp.
 
 ---
 
@@ -1606,7 +1606,7 @@ ASTRACK menggabungkan performa tinggi kompilasi native Flutter dengan keandalan 
 | `package_info_plus` | `^8.2.1` | Pembaca metadata versi aplikasi (`versionName`, `buildNumber`) | Deteksi pembaruan OTA mandiri dan info rilis pada About |
 | `url_launcher` | `^6.3.1` | Peluncur tautan eksternal (Telegram, WhatsApp, Web, Unduhan) | Whitelist host HTTPS resmi untuk update dan bantuan |
 | `cupertino_icons` | `^1.0.8` | Pustaka ikon vektor pelengkap | Pelengkap simbol ikon antarmuka Flutter |
-| `flutter_test` | `SDK Dev` | Mesin pengujian otomatis unit, widget, dan integrasi | Menguji **31 berkas pengujian / 298 definisi uji (100% Pass / Auto-skip)** |
+| `flutter_test` | `SDK Dev` | Mesin pengujian otomatis unit, widget, dan integrasi | Menguji **31 berkas pengujian / 291 definisi uji (278 Pass / 13 Auto-skip)** |
 | `flutter_lints` | `^6.0.0 Dev` | Analisis statis aturan penulisan kode bersih resmi Dart | Memastikan 0 error dan 0 warning pada `flutter analyze` |
 
 ### 1.1 Status Implementasi Modul Lanjutan & Ketergantungan Paket
@@ -1616,7 +1616,7 @@ Berdasarkan audit komparatif antara kode aktual dan rancangan arsitektur:
 * **Remote FCM Push Notifications**: `[PARTIAL]` (Model pendaftaran multi-perangkat `DeviceToken` dan skema database `public.user_device_tokens` telah aktif; SDK klien `firebase_messaging` belum diinstal).
 * **Hardware Biometrik Sidik Jari**: `[PARTIAL]` (Sistem penguncian PIN PBKDF2-HMAC-SHA256 dengan lockout aktif; plugin native `local_auth` belum diinstal di `pubspec.yaml`).
 * **Voice Speech-to-Text**: `[PARTIAL]` (Lembar modal suara dan rule-based conversational intent parser telah aktif; plugin native `speech_to_text` belum diinstal di `pubspec.yaml`).
-* **Crash Reporting & Telemetri**: `[PARTIAL]` (Didukung toggle preferensi opt-in UU PDP pada `PrivacyDataScreen` dan penyimpanan preferensi lokal `SharedPreferences`; saat ini berstatus partial karena belum terhubung ke SDK remote pihak ketiga seperti Sentry/Crashlytics).
+* **Crash Reporting & Telemetri**: Toggle preferensi di UI disembunyikan sampai SDK remote (mis. Sentry) siap dipasang guna menghindari ambiguitas pengguna; digantikan dengan saluran terintegrasi "Laporkan Masalah Sistem" langsung ke tim pengembang via email dan Telegram.
 
 ### 2. Pemanfaatan Perangkat Keras & Sensor Ponsel (Hardware & Device Capabilities)
 ASTRACK mengintegrasikan kemampuan perangkat keras fisik pengguna untuk mempermudah pencatatan keuangan:

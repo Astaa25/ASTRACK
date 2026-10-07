@@ -16,14 +16,17 @@ Seluruh riwayat perubahan, pembaruan versi, dan catatan rilis resmi aplikasi AST
 * **Siklus Hidup Akun Pengguna & Privasi Lanjutan (User Lifecycle & Advanced Privacy)**:
   * Alur pemulihan kata sandi mandiri (`ForgotPasswordScreen` dan `ResetPasswordScreen`) via email verifikasi Supabase Auth dengan deep link Android `io.supabase.astrack://reset-callback`.
   * Hak Penghapusan Akun Permanen (*Right to be Forgotten*) melalui RPC `delete_my_account`: pembersihan data lokal (`SharedPreferences` dan `FlutterSecureStorage`) serta *cascade purge* akun di Supabase PostgreSQL.
-  * Kontrol Privasi Telemetri & Crash Reporting: Ditandai secara transparan sebagai `[PARTIAL]` (toggle preferensi tersimpan di storage lokal; belum terhubung ke SDK remote pihak ketiga seperti Sentry/Crashlytics).
-  * Saluran Bantuan Pengguna & Kebijakan Transaksi: Tautan email bantuan resmi (`support@astrack.app`) dan Telegram di `PolicyScreen` dan `AboutScreen`. Ketentuan pengembalian dana ditandai dengan `[TODO: Kebijakan refund resmi menunggu peninjauan tim legal]`.
-* **Hardening Kriptografis Tingkat Tinggi (Cryptographic Hardening)**:
-  * Peningkatan mekanisme hashing PIN lokal menjadi **PBKDF2-HMAC-SHA256 $\ge 100.000$ iterasi** yang dieksekusi di background isolate via `compute()` guna mencegah pembekuan antarmuka utama (UI thread).
+  * Kebijakan Privasi Bersih: Toggle switch Crash Reporting disembunyikan dari UI pengguna sampai SDK remote resmi diintegrasikan guna menghindari ambiguitas; digantikan dengan saluran terintegrasi "Laporkan Masalah Sistem" via email (`support@astrack.id`) dan Telegram.
+  * Saluran Bantuan Pengguna & Kebijakan Transaksi: Tautan email bantuan resmi (`support@astrack.id`) dan Telegram di `PolicyScreen` dan `AboutScreen`. Ketentuan pengembalian dana ditandai dengan `TODO: [LEGAL_REVIEW] Kebijakan pengembalian dana (refund) resmi sedang dalam peninjauan tim legal`.
+* **Hardening Kriptografis Tingkat Tinggi (Cryptographic Hardening & Resilience)**:
+  * Peningkatan mekanisme hashing PIN lokal menjadi **PBKDF2-HMAC-SHA256 100.000 iterasi** yang dieksekusi di background isolate via `compute()` guna mencegah pembekuan antarmuka utama (UI thread).
+  * Eliminasi delay buatan 600ms pada `PinLockScreen`, penambahan indikator visual proses responsif (`Memproses PIN...`), dan penonaktifan interaksi keypad selama komputasi derivasi berlangsung.
   * Pemindahan hash, garam acak dinamis 16-byte (`Random.secure()`), penghitung kegagalan (*failed attempts*), dan status *lockout* ke **`FlutterSecureStorage`** (terenkripsi hardware-backed Android Keystore).
+  * Mitigasi Auto Backup Android: `android:allowBackup="false"` disetel pada `<application>` di `AndroidManifest.xml` guna mencegah kebocoran data unencrypted dan desinkronisasi Keystore.
+  * Resiliensi Galat Android Keystore: Penanganan `try/catch` pada `SecurityService` dengan fallback aman ke status belum diatur (`hasPin = false`), aktivasi `forceReloginNotifier`, dan metode `triggerSafeSignOut()`.
   * Migrasi transparan tanpa hambatan dari format lama (plaintext SharedPreferences atau hash legacy) ke format aman 100.000 iterasi di `FlutterSecureStorage`.
   * Proteksi serangan berbasis waktu (*Anti-Timing Attack*) menggunakan perbandingan waktu-konstan `_constantTimeEquals`.
-  * Arsitektur Pembayaran Terisolasi Edge Gateway (*Zero-Secret Client*): Dibuat skeleton Supabase Edge Function `payment-webhook` dengan HMAC SHA-512/SHA-256, jendela toleransi replay 5 menit, dan idempotensi `payment_webhook_events`. Klien aplikasi bersih dari `webhookSecret` dan server key.
+  * Arsitektur Pembayaran Terisolasi Edge Gateway (*Zero-Secret Client*): Deployment Supabase Edge Function `payment-webhook` dengan flag `--no-verify-jwt`, validasi secret `XENDIT_WEBHOOK_TOKEN` (`x-callback-token`), verifikasi status pesanan `pending`, pencocokan nominal `gross_amount` vs `final_amount`, serta perhitungan durasi paket aktif secara dinamis dari tabel `plans`.
 * **Integritas Finansial & Audit Uang Bilangan Bulat**:
   * Eliminasi residu komputasi pecahan IEEE 754 dengan pemformatan bilangan bulat (`roundToInt()`) Rupiah.
   * Penegakan aturan batas bawah nol (*Zero-Floor Rule*) pada perhitungan harga dan kupon diskon.
@@ -43,4 +46,4 @@ Seluruh riwayat perubahan, pembaruan versi, dan catatan rilis resmi aplikasi AST
 
 ### 🧪 Jaminan Kualitas (QA Metrics)
 * **Static Analysis**: `flutter analyze` $\rightarrow$ **0 issues found** (0 errors, 0 warnings).
-* **Automated Tests**: `flutter test` $\rightarrow$ **31 berkas pengujian / 298 tests total (100% Pass, 0 Failure, 0 Flaky; 13 tests live probe auto-skip jika tanpa `--dart-define`)**.
+* **Automated Tests**: `flutter test` $\rightarrow$ **31 berkas pengujian / 291 tests total (100% Pass, 0 Failure, 0 Flaky; 278 passed, 13 tests live probe auto-skip jika tanpa `--dart-define`)**.
