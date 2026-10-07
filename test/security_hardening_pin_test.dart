@@ -96,5 +96,52 @@ void main() {
       expect(secureHash, isNull);
       expect(secureSalt, isNull);
     });
+
+    test('Keystore decryption failure (post-restore corruption) is caught safely and falls back to unconfigured PIN', () async {
+      final security = SecurityService.instance;
+      security.setSecureStorageForTesting(const _CorruptedKeystoreSecureStorage());
+
+      // init() catches Keystore corruption without throwing
+      await security.init();
+
+      expect(security.hasPin, isFalse);
+      expect(security.isPinEnabled, isFalse);
+      expect(security.forceReloginNotifier.value, isTrue);
+
+      // verifyPin also catches Keystore read errors gracefully
+      final verifyResult = await security.verifyPin('123456');
+      expect(verifyResult, isFalse);
+
+      // Trigger safe sign-out cleans state and resets forceReloginNotifier
+      await security.triggerSafeSignOut();
+      expect(security.forceReloginNotifier.value, isFalse);
+
+      // Reset back to standard mock storage
+      security.setSecureStorageForTesting(const FlutterSecureStorage(
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      ));
+    });
   });
+}
+
+class _CorruptedKeystoreSecureStorage implements FlutterSecureStorage {
+  const _CorruptedKeystoreSecureStorage();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #read) {
+      return Future<String?>.error(
+        Exception('AndroidKeyStore decryption failure: key corrupted or lost after restore'),
+      );
+    }
+    if (invocation.memberName == #write) {
+      return Future<void>.error(
+        Exception('AndroidKeyStore encryption failure: Keystore unavailable'),
+      );
+    }
+    if (invocation.memberName == #deleteAll) {
+      return Future<void>.value();
+    }
+    return super.noSuchMethod(invocation);
+  }
 }

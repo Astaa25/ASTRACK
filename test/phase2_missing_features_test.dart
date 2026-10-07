@@ -103,27 +103,26 @@ void main() {
       expect(find.text('Konfirmasi kata sandi tidak cocok.'), findsOneWidget);
     });
 
-    testWidgets('3. PrivacyDataScreen Crash Reporting toggle updates SharedPreferences', (tester) async {
+    testWidgets('3. PrivacyDataScreen provides official issue reporting dialog and support channel', (tester) async {
       await tester.pumpWidget(createTestApp(
         child: const PrivacyDataScreen(),
         storage: storage,
       ));
       await tester.pumpAndSettle();
 
-      // Find Crash Reporting toggle switch
-      final switchTile = find.byType(SwitchListTile);
-      expect(switchTile, findsOneWidget);
-      expect(find.text('Laporan Galat Sistem (Crash Reporting) [PARTIAL]'), findsOneWidget);
+      // Find "Laporkan Masalah Sistem" tile
+      final reportTile = find.text('Laporkan Masalah Sistem');
+      expect(reportTile, findsOneWidget);
 
-      // Initially false
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getBool('astrack_crash_reporting_enabled'), isNull);
-
-      // Toggle switch to ON
-      await tester.tap(switchTile);
+      await tester.scrollUntilVisible(reportTile, 100);
+      await tester.tap(reportTile);
       await tester.pumpAndSettle();
 
-      expect(prefs.getBool('astrack_crash_reporting_enabled'), isTrue);
+      // Verify support dialog opened with email and Telegram contacts
+      expect(find.text('Laporkan Masalah'), findsOneWidget);
+      expect(find.textContaining('support@astrack.id'), findsWidgets);
+      expect(find.textContaining('@astrack_official'), findsOneWidget);
+      expect(find.text('Salin Email'), findsOneWidget);
     });
 
     testWidgets('4. PrivacyDataScreen Account Deletion dialog flow and backup recommendation', (tester) async {

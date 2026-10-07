@@ -1697,7 +1697,7 @@ Untuk memastikan kemandirian distribusi tanpa ketergantungan mutlak pada ekosist
 * **Berkas Sumber**: `lib/features/auth/forgot_password_screen.dart`, `lib/features/auth/reset_password_screen.dart`, `lib/features/settings/privacy_data_screen.dart`, `lib/features/policy/policy_screen.dart`, `android/app/src/main/AndroidManifest.xml`
 * **Test Suite Terverifikasi**: `test/phase2_missing_features_test.dart` (7 Tests, 100% Pass)
 
-### 1. Alur Pemulihan Sandi Mandiri & Deep Link Callback
+### 1. Alur Pemulihan Sandi Mandiri, SMTP Supabase & Deep Link Callback
 * **`ForgotPasswordScreen` & Supabase GoTrue**: Mengirimkan email pemulihan sandi via `sendPasswordResetEmail(email)` dengan konfigurasi redirect callback:
   ```dart
   await client.auth.resetPasswordForEmail(
@@ -1705,6 +1705,10 @@ Untuk memastikan kemandirian distribusi tanpa ketergantungan mutlak pada ekosist
     redirectTo: 'io.supabase.astrack://reset-callback',
   );
   ```
+* **Catatan Kritis Rate Limit SMTP Supabase & Konfigurasi Custom SMTP**:
+  Layanan bawaan *built-in email service* Supabase menerapkan batas ketat (*rate limit* sekitar 3–4 email pemulihan per jam per proyek). Untuk lingkungan produksi, pemilik proyek **wajib** mengonfigurasi penyedia Custom SMTP (seperti *Resend, SendGrid, Amazon SES, Brevo, atau Mailgun*) di Supabase Dashboard (`Project Settings -> Authentication -> SMTP Settings`).
+* **Pendaftaran Redirect URLs**:
+  Skema callback `io.supabase.astrack://reset-callback` wajib didaftarkan di Supabase Dashboard (`Authentication -> URL Configuration -> Redirect URLs`).
 * **Integrasi Deep Link Android**: `android/app/src/main/AndroidManifest.xml` mengonfigurasi `intent-filter` berskema `io.supabase.astrack` dengan host `reset-callback` sehingga tautan verifikasi dari email otomatis membuka aplikasi dan mengarahkan pengguna ke `ResetPasswordScreen`.
 * **`ResetPasswordScreen`**: Menangani input kata sandi baru dengan indikator kekuatan sandi dan konfirmasi sandi berlapis sebelum memanggil `updateUserPassword()`.
 
@@ -1713,42 +1717,48 @@ Untuk memastikan kemandirian distribusi tanpa ketergantungan mutlak pada ekosist
 * **Pembersihan Data Lokal Total**: Seluruh data transaksi lokal pada `SharedPreferences` dan kredensial PIN pada `FlutterSecureStorage` dibersihkan seketika.
 * **Pembersihan Cloud RPC `delete_my_account`**: Menjalankan penghapusan *cascade purge* akun dan data finansial terkait di Supabase PostgreSQL, mencabut sesi JWT (`signOut()`), dan mengarahkan pengguna kembali ke halaman Login.
 
-### 3. Kendali Privasi Telemetri & Crash Reporting `[PARTIAL]`
-* Disediakan toggle preferensi privasi pada `PrivacyDataScreen` bertanda `[PARTIAL]`.
-* Status preferensi disimpan di `SharedPreferences` lokal (`astrack_crash_reporting_enabled`). Saat ini belum terhubung ke SDK telemetri pihak ketiga seperti Sentry atau Crashlytics guna menjamin kedaulatan data privasi.
+### 3. Saluran Bantuan Sistem & Kebijakan Privasi Bersih
+* **Penyembunyian Toggle Telemetri Tanpa SDK Remote**: Toggle switch Crash Reporting disembunyikan dari UI `PrivacyDataScreen` sampai SDK monitoring pihak ketiga (seperti Sentry) resmi diintegrasikan, mencegah kebingungan pengguna dan menghilangkan label `[PARTIAL]`.
+* **Saluran Bantuan Terintegrasi**: Disediakan opsi "Laporkan Masalah Sistem" di `PrivacyDataScreen` yang menampilkan dialog bantuan resmi pengembang (Email: `support@astrack.id`, Telegram: `@astrack_official`) dengan kemudahan salin alamat ke clipboard.
 
 ### 4. Saluran Dukungan Resmi & Ketentuan Transaksi
-* **`PolicyScreen`**: Memuat dokumentasi transparansi hukum mengenai pemrosesan data lokal, privasi AI, dan saluran kontak bantuan resmi (`support@astrack.app` dan Telegram).
-* **Kebijakan Refund**: Berstatus `[TODO: Kebijakan pengembalian dana (refund) resmi sedang dalam peninjauan tim legal]`.
+* **`PolicyScreen`**: Memuat dokumentasi transparansi hukum mengenai pemrosesan data lokal, privasi AI, dan saluran kontak bantuan resmi (`support@astrack.id` dan Telegram).
+* **Kebijakan Refund**: Berstatus `TODO: [LEGAL_REVIEW] Kebijakan pengembalian dana (refund) resmi sedang dalam peninjauan tim legal`.
 
 ---
 
 # 79. Hardening Keamanan Kriptografis Tingkat Tinggi (Cryptographic Hardening & Salt Migration)
 
-* **Berkas Sumber**: `lib/core/services/security_service.dart`
-* **Test Suite Terverifikasi**: `test/phase3_security_hardening_test.dart` (7 Tests, 100% Pass) & `test/security_hardening_pin_test.dart` (4 Tests, 100% Pass)
+* **Berkas Sumber**: `lib/core/services/security_service.dart`, `lib/features/auth/pin_lock_screen.dart`, `android/app/src/main/AndroidManifest.xml`
+* **Test Suite Terverifikasi**: `test/phase3_security_hardening_test.dart` (7 Tests, 100% Pass) & `test/security_hardening_pin_test.dart` (5 Tests, 100% Pass)
 
-### 1. Spesifikasi PBKDF2-HMAC-SHA256 >= 100.000 Iterasi & Isolate Execution
+### 1. Spesifikasi PBKDF2-HMAC-SHA256 >= 100.000 Iterasi & Tuning Latensi
 ASTRACK mengamankan PIN 6-digit pengguna menggunakan algoritma derivasi kunci standar industri **PBKDF2 (Password-Based Key Derivation Function 2)** dengan fungsi pseudo-random HMAC-SHA256:
-* **Jumlah Iterasi**: **>= 100.000 putaran kalkulasi** (*work factor* standar OWASP), memperlambat serangan brute-force berbasis GPU atau peretasan offline.
-* **Eksekusi di Background Isolate**: Kalkulasi 100.000 iterasi dijalankan di thread terpisah menggunakan fungsi `compute()` Flutter. Hal ini mencegah pembekuan (*UI freezing / frame drops*) pada antarmuka utama saat validasi PIN.
-* **Pengukuran Latensi Runtime**: Durasi kalkulasi diukur menggunakan `Stopwatch` dan dicatat dalam telemetri (`lastDerivationLatencyMs`, rata-rata 600–800ms).
+* **Jumlah Iterasi Standar**: **100.000 putaran kalkulasi** (*work factor* standar OWASP), memperlambat serangan brute-force berbasis GPU atau peretasan offline.
+* **Tuning untuk Perangkat Android Kelas Bawah (Low-End)**: Pada perangkat Android dengan spesifikasi CPU terbatas, konstanta iterasi dapat disesuaikan ke rentang 50.000–100.000 jika latensi komputasi melebihi 1,5 detik, namun **dilarang keras diturunkan di bawah 10.000 putaran**.
+* **Eksekusi di Background Isolate**: Kalkulasi derivasi dijalankan di thread terpisah menggunakan fungsi `compute()` Flutter untuk mencegah UI freezing.
+* **Pengalaman Pengguna Responsif di `PinLockScreen`**: Jeda buatan (*artificial delay 600ms*) telah dieliminasi total. Antarmuka menampilkan indikator pemrosesan (`Memproses PIN...`) dan menonaktifkan keypad secara visual serta interaktif (`IgnorePointer`) murni selama komputasi isolate berlangsung.
 * **Garam Dinamis Acak Per-Perangkat**: Garam kriptografis acak 16-byte (`128-bit` / 32 hex chars) dihasilkan menggunakan `Random.secure()`.
 
-### 2. Penyimpanan Kredensial Hardware-Backed (`FlutterSecureStorage`)
-Seluruh data sensitif terkait PIN dipindahkan dari `SharedPreferences` biasa ke **`FlutterSecureStorage`** yang dilindungi oleh hardware enkripsi OS (Android Keystore dengan `encryptedSharedPreferences: true`):
+### 2. Penyimpanan Kredensial Hardware-Backed (`FlutterSecureStorage`) & Proteksi Backup
+Seluruh data sensitif terkait PIN disimpan di **`FlutterSecureStorage`** dengan hardware enkripsi Android Keystore (`encryptedSharedPreferences: true`):
 * `astrack_user_pin_hash`: Hash biner 64 karakter hex.
 * `astrack_user_pin_salt`: Garam acak 16-byte hex.
 * `astrack_pin_iterations`: Jumlah putaran kalkulasi (100.000).
 * `astrack_pin_failed_attempts`: Penghitung kesalahan input PIN.
 * `astrack_pin_lockout_until`: Stempel waktu lockout.
+* **Mitigasi Auto Backup Android**: Elemen `<application>` di `AndroidManifest.xml` dikonfigurasi dengan atribut `android:allowBackup="false"` untuk mencegah sistem Android Auto Backup mengekstraksi data unencrypted yang berisiko merusak sinkronisasi kunci Keystore saat restore.
 
-### 3. Migrasi Transparan Format Lama (Zero-Friction Migration)
+### 3. Ketahanan & Resiliensi Galat Android Keystore (Keystore Crash Resilience)
+* Pemanggilan storage pada `SecurityService.init()` dan `SecurityService.verifyPin()` dibungkus dalam blok penanganan eksepsi `try / catch`.
+* Jika Keystore mengalami desinkronisasi atau korupsi setelah update OS / migrasi perangkat, sistem tidak akan mengalami *crash*. Sistem melakukan fallback aman ke status PIN belum diatur (`hasPin = false`), mengaktifkan `forceReloginNotifier`, serta menyediakan metode `triggerSafeSignOut()` yang membersihkan sesi Supabase dan preferensi lokal secara aman.
+
+### 4. Migrasi Transparan Format Lama (Zero-Friction Migration)
 * Saat `SecurityService.init()` berjalan, sistem mendeteksi apakah terdapat hash atau plaintext lama di `SharedPreferences`.
 * Data lama otomatis dipindahkan ke `FlutterSecureStorage` dan dihapus dari `SharedPreferences`.
 * Saat verifikasi PIN berhasil, jika terdeteksi iterasi versi lama (10.000 iterasi atau legacy SHA-256), sistem seketika meng-upgrade hash secara otomatis (*seamless background re-hash*) ke standar 100.000 iterasi dengan garam baru.
 
-### 4. Eliminasi Serangan Waktu (Constant-Time String Comparison)
+### 5. Eliminasi Serangan Waktu (Constant-Time String Comparison)
 Perbandingan hash diverifikasi menggunakan metode waktu konstan `_constantTimeEquals` tanpa *early-exit*, menepis serangan analisis waktu (*timing side-channel attacks*).
 
 ---
@@ -1761,20 +1771,26 @@ Perbandingan hash diverifikasi menggunakan metode waktu konstan `_constantTimeEq
 
 ### 1. Prinsip Zero-Secret Client (Kepatuhan OWASP MASVS)
 Aplikasi mobile klien ASTRACK dirancang dengan arsitektur **Zero-Secret Client**:
-* Kunci rahasia gateway (`MIDTRANS_SERVER_KEY`, `PAYMENT_WEBHOOK_SECRET`) **DILARANG KERAS** disimpan atau di-bundle di dalam kode biner aplikasi klien Android.
+* Kunci rahasia gateway (`MIDTRANS_SERVER_KEY`, `PAYMENT_WEBHOOK_SECRET`, `XENDIT_WEBHOOK_TOKEN`) **DILARANG KERAS** disimpan atau di-bundle di dalam kode biner aplikasi klien Android.
 * Seluruh rahasia server dikonfigurasi melalui Supabase Vault atau Environment Secrets (`supabase secrets set`).
 * Layar konfigurasi admin pada aplikasi mobile (`AdminGatewayConfigScreen`) tidak menampilkan input teks rahasia server, melainkan kartu status perlindungan arsitektur Zero-Secret.
 
 ### 2. Supabase Edge Function `payment-webhook`
 Endpoint serverless Deno TypeScript resmi `payment-webhook` bertindak sebagai penerima tunggal webhook callback pembayaran:
-1. **Mitigasi Serangan Replay (5-Minute Window)**: Stempel waktu transaksi diverifikasi berada dalam rentang toleransi $\le 300\text{ detik}$ (5 menit).
-2. **Verifikasi Kriptografis Multi-Gateway**:
-   * **Midtrans**: Memvalidasi signature `SHA512(order_id + status_code + gross_amount + ServerKey)`.
-   * **Xendit / Custom HMAC**: Memvalidasi header signature terhadap `HMAC-SHA256(Secret, rawBody)`.
-3. **Idempotensi Transaksi (`public.payment_webhook_events`)**:
+1. **Deployment Wajib `--no-verify-jwt`**:
+   Deploy menggunakan perintah `supabase functions deploy payment-webhook --no-verify-jwt`. Gateway pembayaran publik tidak menyertakan JWT Supabase pengguna, sehingga bypass verifikasi gateway Kong wajib diaktifkan.
+2. **Mitigasi Serangan Replay (5-Minute Window)**: Stempel waktu transaksi diverifikasi berada dalam rentang toleransi $\le 300\text{ detik}$ (5 menit).
+3. **Verifikasi Kriptografis Multi-Gateway**:
+   * **Midtrans**: Memvalidasi signature `SHA512(order_id + status_code + gross_amount + MIDTRANS_SERVER_KEY)` dengan *constant-time comparison*.
+   * **Xendit**: Memvalidasi token header `x-callback-token` terhadap secret `XENDIT_WEBHOOK_TOKEN` secara konstan waktu.
+   * **Custom HMAC**: Memvalidasi header signature terhadap `HMAC-SHA256(Secret, rawBody)`.
+4. **Idempotensi Transaksi (`public.payment_webhook_events`)**:
    Memeriksa kunci unik `event_id` sebelum memproses. Panggilan duplikat langsung direspons `200 OK (idempotent duplicate)` tanpa mutasi ganda.
-4. **Pembaruan Status & Aktivasi Paket Otomatis**:
-   Mengubah status `payment_orders` menjadi `approved` dan memperpanjang masa aktif paket langganan pengguna di tabel `subscriptions` selama 30 hari.
+5. **Validasi Status Pending & Pencocokan Nominal (Anti-Fraud Enforcement)**:
+   * Memastikan status pesanan di `payment_orders` saat ini adalah `pending` sebelum diubah menjadi `approved`.
+   * Memvalidasi kecocokan nilai `gross_amount` yang dibayar dengan `final_amount` pesanan di database. Ketidakcocokan nominal langsung ditolak dengan `400 Bad Request`.
+6. **Kalkulasi Masa Aktif Langganan Dinamis**:
+   Masa aktif dihitung secara dinamis dari tabel `plans` (`duration_days` atau siklus tagihan tahunan 365 hari / bulanan 30 hari), bukan hardcoded 30 hari, lalu diperbarui pada tabel `subscriptions`.
 
 ---
 

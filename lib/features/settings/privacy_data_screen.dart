@@ -20,38 +20,7 @@ class PrivacyDataScreen extends StatefulWidget {
 
 class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
   bool _isSyncing = false;
-  bool _crashReportingEnabled = false;
   final TextEditingController _restoreTextCtrl = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _crashReportingEnabled = prefs.getBool('astrack_crash_reporting_enabled') ?? false;
-      });
-    }
-  }
-
-  Future<void> _toggleCrashReporting(bool val) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('astrack_crash_reporting_enabled', val);
-    setState(() => _crashReportingEnabled = val);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(val
-            ? '✓ Laporan galat sistem anonim diaktifkan.'
-            : 'Laporan galat sistem dinonaktifkan.'),
-        backgroundColor: val ? AppColors.emerald : AppColors.expense,
-      ),
-    );
-  }
 
   @override
   void dispose() {
@@ -94,6 +63,64 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
       const SnackBar(
         content: Text('✓ Cadangan JSON berhasil disalin ke clipboard!'),
         backgroundColor: AppColors.emerald,
+      ),
+    );
+  }
+
+  void _showReportIssueDialog() {
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.support_agent_rounded, color: AppColors.emerald),
+            SizedBox(width: 8),
+            Text('Laporkan Masalah', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Jika Anda mendapati galat atau kendala sistem, hubungi saluran pengembang resmi:',
+              style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkPrimary.withOpacity(0.12) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• Email: support@astrack.id', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  SizedBox(height: 4),
+                  Text('• Telegram: @astrack_official', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Tutup')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.emerald, foregroundColor: Colors.white),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Clipboard.setData(const ClipboardData(text: 'support@astrack.id'));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('✓ Alamat email pengembang disalin ke clipboard'), backgroundColor: AppColors.emerald),
+              );
+            },
+            child: const Text('Salin Email'),
+          ),
+        ],
       ),
     );
   }
@@ -590,8 +617,8 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
 
             const SizedBox(height: 24),
 
-            // Telemetry & Diagnostics (Crash Reporting Opt-in)
-            _buildSectionHeader('TELEMETRI & DIAGNOSTIK APLIKASI', isDark),
+            // Telemetry & Help / Issue Reporting
+            _buildSectionHeader('DIAGNOSTIK & BANTUAN SISTEM', isDark),
             const SizedBox(height: 8),
             Material(
               color: isDark ? AppColors.darkCard : Colors.white,
@@ -600,10 +627,10 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
               ),
-              child: SwitchListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: ListTile(
+                leading: const Icon(Icons.bug_report_outlined, color: AppColors.emerald),
                 title: Text(
-                  'Laporan Galat Sistem (Crash Reporting) [PARTIAL]',
+                  'Laporkan Masalah Sistem',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -611,16 +638,14 @@ class _PrivacyDataScreenState extends State<PrivacyDataScreen> {
                   ),
                 ),
                 subtitle: Text(
-                  'Preferensi lokal penanganan galat. [PARTIAL]: Belum terhubung ke server remote pihak ketiga (Sentry/Crashlytics). Data finansial Anda TIDAK PERNAH dikirim.',
+                  'Sampaikan kendala, galat teknis, atau bug langsung ke tim pengembang resmi.',
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                    height: 1.35,
                   ),
                 ),
-                value: _crashReportingEnabled,
-                activeColor: AppColors.emerald,
-                onChanged: _toggleCrashReporting,
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: _showReportIssueDialog,
               ),
             ),
 

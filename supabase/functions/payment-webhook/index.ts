@@ -58,6 +58,7 @@ serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const midtransServerKey = Deno.env.get("MIDTRANS_SERVER_KEY") || "";
     const webhookSecret = Deno.env.get("PAYMENT_WEBHOOK_SECRET") || "";
+    const xenditWebhookToken = Deno.env.get("XENDIT_WEBHOOK_TOKEN") || "";
 
     if (!supabaseUrl || !supabaseServiceKey) {
       return new Response(
@@ -102,7 +103,7 @@ serve(async (req: Request) => {
       }
     }
 
-    // 3. Cryptographic Signature & HMAC Verification
+    // 3. Cryptographic Signature & Token Verification
     const orderId = payload.order_id || payload.external_id || payload.orderId;
     const statusCode = payload.status_code || payload.statusCode || "200";
     const grossAmount = payload.gross_amount || payload.grossAmount || payload.amount;
@@ -120,7 +121,15 @@ serve(async (req: Request) => {
       }
     }
 
-    // B. Generic HMAC-SHA256 Header Verification (e.g. Xendit / Custom Webhooks)
+    // B. Xendit Verification: x-callback-token header validation
+    const xenditHeaderToken = req.headers.get("x-callback-token");
+    if (!isVerified && xenditHeaderToken && xenditWebhookToken) {
+      if (timingSafeEqual(xenditHeaderToken, xenditWebhookToken)) {
+        isVerified = true;
+      }
+    }
+
+    // C. Generic HMAC-SHA256 Header Verification (e.g. Custom Webhooks)
     const hmacHeader = req.headers.get("x-callback-signature") || req.headers.get("x-astrack-signature");
     if (!isVerified && hmacHeader && webhookSecret) {
       const expectedHmac = await hmacSha256Hex(webhookSecret, rawBody);
@@ -129,7 +138,7 @@ serve(async (req: Request) => {
       }
     }
 
-    // C. Sandbox / Development Fallback with configured test environment
+    // D. Sandbox / Development Fallback with configured test environment
     const isDevelopment = Deno.env.get("ENVIRONMENT") === "development";
     if (!isVerified && isDevelopment && payload.provider === "sandbox") {
       isVerified = true;
@@ -137,7 +146,7 @@ serve(async (req: Request) => {
 
     if (!isVerified) {
       return new Response(
-        JSON.stringify({ error: "Cryptographic signature verification failed" }),
+        JSON.stringify({ error: "Cryptographic signature or token verification failed" }),
         { status: 401, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -184,6 +193,57 @@ serve(async (req: Request) => {
       payload.status === "COMPLETED";
 
     if (isPaid && orderId) {
+      // Fetch order from payment_orders to validate pending status & exact amount
+      const { data: orderData, error: orderErr } = await supabaseAdmin
+        .from("payment_orders")
+        .select("order_id, user_id, plan_id, final_amount, status")
+        .eq("order_id", orderId)
+        .maybeSingle();
+
+      if (orderErr || !orderData) {
+        return new Response(
+          JSON.stringify({ error: "Order not found in database", order_id: orderId }),
+          { status: 404, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // Ensure order status is currently pending before transitioning to approved
+      if (orderData.status !== "pending") {
+        if (orderData.status === "approved") {
+          return new Response(
+            JSON.stringify({
+              status: "already_approved",
+              message: "Order already approved previously",
+              order_id: orderId,
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          );
+        } else {
+          return new Response(
+            JSON.stringify({
+              error: `Invalid order state transition: current status is '${orderData.status}'`,
+              order_id: orderId,
+            }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      // Validate payment gross_amount matches order final_amount
+      const paidAmount = Number(grossAmount);
+      const expectedAmount = Number(orderData.final_amount);
+      if (isNaN(paidAmount) || Math.abs(paidAmount - expectedAmount) > 0.01) {
+        return new Response(
+          JSON.stringify({
+            error: "Payment gross_amount mismatch with order final_amount",
+            paid_amount: paidAmount,
+            expected_amount: expectedAmount,
+            order_id: orderId,
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
       // Update order status to approved in payment_orders
       await supabaseAdmin
         .from("payment_orders")
@@ -193,27 +253,36 @@ serve(async (req: Request) => {
         })
         .eq("order_id", orderId);
 
-      // Fetch user_id and plan_id from payment_orders to activate subscription
-      const { data: orderData } = await supabaseAdmin
-        .from("payment_orders")
-        .select("user_id, plan_id")
-        .eq("order_id", orderId)
-        .maybeSingle();
+      // Determine active plan duration dynamically from plans table
+      let durationDays = 30; // fallback default
+      if (orderData.plan_id) {
+        const { data: planData } = await supabaseAdmin
+          .from("plans")
+          .select("duration_days, billing_cycle")
+          .eq("id", orderData.plan_id)
+          .maybeSingle();
 
-      if (orderData && orderData.user_id && orderData.plan_id) {
-        // Activate subscription in PostgreSQL
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 30); // 30 days active tier
-
-        await supabaseAdmin.from("subscriptions").upsert({
-          user_id: orderData.user_id,
-          plan_id: orderData.plan_id,
-          status: "active",
-          starts_at: new Date().toISOString(),
-          expires_at: expiresAt.toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+        if (planData?.duration_days && Number(planData.duration_days) > 0) {
+          durationDays = Number(planData.duration_days);
+        } else if (
+          planData?.billing_cycle === "yearly" ||
+          planData?.billing_cycle === "tahunan"
+        ) {
+          durationDays = 365;
+        }
       }
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + durationDays);
+
+      await supabaseAdmin.from("subscriptions").upsert({
+        user_id: orderData.user_id,
+        plan_id: orderData.plan_id,
+        status: "active",
+        starts_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+        updated_at: new Date().toISOString(),
+      });
     }
 
     return new Response(

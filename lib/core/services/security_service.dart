@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Pbkdf2Params {
   final String pin;
@@ -43,10 +44,13 @@ class SecurityService with WidgetsBindingObserver {
   // Secret Salt retained strictly for legacy SHA-256 migration
   static const String _legacyPinSalt = 'ASTRACK_SECURE_SALT_v1_98a7c2f5';
 
-  /// Standard PBKDF2 iterations hardened to 100,000 rounds
+  /// Standard PBKDF2 iterations hardened to 100,000 rounds.
+  /// Tuning note: On lower-end Android devices, this can be tuned to 50,000 if latency exceeds 1.5s,
+  /// but must NEVER be set below 10,000 rounds.
   static const int pbkdf2Iterations = 100000;
 
   final ValueNotifier<bool> isLockedNotifier = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> forceReloginNotifier = ValueNotifier<bool>(false);
 
   FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -89,90 +93,104 @@ class SecurityService with WidgetsBindingObserver {
   }
 
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
+    try {
+      final prefs = await SharedPreferences.getInstance();
 
-    // 1. Transparent migration from legacy unencrypted SharedPreferences to FlutterSecureStorage
-    final legacyPlainPin = prefs.getString(_keyLegacyPin);
-    if (legacyPlainPin != null && legacyPlainPin.isNotEmpty) {
-      final salt = generateSecureSalt();
-      final sw = Stopwatch()..start();
-      final hashed = await compute(
-        _pbkdf2IsolateWorker,
-        Pbkdf2Params(legacyPlainPin, salt, pbkdf2Iterations),
-      );
-      sw.stop();
-      _lastDerivationLatencyMs = sw.elapsedMilliseconds;
+      // 1. Transparent migration from legacy unencrypted SharedPreferences to FlutterSecureStorage
+      final legacyPlainPin = prefs.getString(_keyLegacyPin);
+      if (legacyPlainPin != null && legacyPlainPin.isNotEmpty) {
+        final salt = generateSecureSalt();
+        final sw = Stopwatch()..start();
+        final hashed = await compute(
+          _pbkdf2IsolateWorker,
+          Pbkdf2Params(legacyPlainPin, salt, pbkdf2Iterations),
+        );
+        sw.stop();
+        _lastDerivationLatencyMs = sw.elapsedMilliseconds;
 
-      await _secureStorage.write(key: _keyPinHash, value: hashed);
-      await _secureStorage.write(key: _keyPinSalt, value: salt);
-      await _secureStorage.write(key: _keyPinIterations, value: pbkdf2Iterations.toString());
-      await prefs.remove(_keyLegacyPin);
-    }
-
-    final legacyPrefsHash = prefs.getString(_keyPinHash);
-    if (legacyPrefsHash != null && legacyPrefsHash.isNotEmpty) {
-      final legacySalt = prefs.getString(_keyPinSalt);
-      final legacyAttempts = prefs.getInt(_keyFailedAttempts) ?? 0;
-      final legacyLockout = prefs.getInt(_keyLockoutUntil);
-
-      await _secureStorage.write(key: _keyPinHash, value: legacyPrefsHash);
-      if (legacySalt != null) {
-        await _secureStorage.write(key: _keyPinSalt, value: legacySalt);
-        await _secureStorage.write(key: _keyPinIterations, value: '10000'); // marked as legacy 10k
-      }
-      await _secureStorage.write(key: _keyFailedAttempts, value: legacyAttempts.toString());
-      if (legacyLockout != null) {
-        await _secureStorage.write(key: _keyLockoutUntil, value: legacyLockout.toString());
+        await _secureStorage.write(key: _keyPinHash, value: hashed);
+        await _secureStorage.write(key: _keyPinSalt, value: salt);
+        await _secureStorage.write(key: _keyPinIterations, value: pbkdf2Iterations.toString());
+        await prefs.remove(_keyLegacyPin);
       }
 
-      // Wipe from unencrypted SharedPreferences
-      await prefs.remove(_keyPinHash);
-      await prefs.remove(_keyPinSalt);
-      await prefs.remove(_keyFailedAttempts);
-      await prefs.remove(_keyLockoutUntil);
-      await prefs.remove(_keyLegacyPin);
-    }
+      final legacyPrefsHash = prefs.getString(_keyPinHash);
+      if (legacyPrefsHash != null && legacyPrefsHash.isNotEmpty) {
+        final legacySalt = prefs.getString(_keyPinSalt);
+        final legacyAttempts = prefs.getInt(_keyFailedAttempts) ?? 0;
+        final legacyLockout = prefs.getInt(_keyLockoutUntil);
 
-    // 2. Load cached credentials from hardware-backed FlutterSecureStorage
-    _cachedPinHash = await _secureStorage.read(key: _keyPinHash);
-    _cachedPinSalt = await _secureStorage.read(key: _keyPinSalt);
-    final iterStr = await _secureStorage.read(key: _keyPinIterations);
-    _cachedPinIterations = iterStr != null ? int.tryParse(iterStr) : null;
+        await _secureStorage.write(key: _keyPinHash, value: legacyPrefsHash);
+        if (legacySalt != null) {
+          await _secureStorage.write(key: _keyPinSalt, value: legacySalt);
+          await _secureStorage.write(key: _keyPinIterations, value: '10000'); // marked as legacy 10k
+        }
+        await _secureStorage.write(key: _keyFailedAttempts, value: legacyAttempts.toString());
+        if (legacyLockout != null) {
+          await _secureStorage.write(key: _keyLockoutUntil, value: legacyLockout.toString());
+        }
 
-    final failedStr = await _secureStorage.read(key: _keyFailedAttempts);
-    _failedAttempts = failedStr != null ? (int.tryParse(failedStr) ?? 0) : 0;
-
-    final pinEnStr = await _secureStorage.read(key: _keyPinEnabled);
-    if (pinEnStr != null) {
-      _pinEnabled = pinEnStr == 'true';
-    } else {
-      _pinEnabled = prefs.getBool(_keyPinEnabled) ?? false;
-      if (_pinEnabled) {
-        await _secureStorage.write(key: _keyPinEnabled, value: 'true');
+        // Wipe from unencrypted SharedPreferences
+        await prefs.remove(_keyPinHash);
+        await prefs.remove(_keyPinSalt);
+        await prefs.remove(_keyFailedAttempts);
+        await prefs.remove(_keyLockoutUntil);
+        await prefs.remove(_keyLegacyPin);
       }
-    }
 
-    final bioEnStr = await _secureStorage.read(key: _keyBiometricEnabled);
-    if (bioEnStr != null) {
-      _biometricEnabled = bioEnStr == 'true';
-    } else {
-      _biometricEnabled = prefs.getBool(_keyBiometricEnabled) ?? false;
-    }
+      // 2. Load cached credentials from hardware-backed FlutterSecureStorage
+      _cachedPinHash = await _secureStorage.read(key: _keyPinHash);
+      _cachedPinSalt = await _secureStorage.read(key: _keyPinSalt);
+      final iterStr = await _secureStorage.read(key: _keyPinIterations);
+      _cachedPinIterations = iterStr != null ? int.tryParse(iterStr) : null;
 
-    final lockoutStr = await _secureStorage.read(key: _keyLockoutUntil);
-    if (lockoutStr != null) {
-      final lockoutMs = int.tryParse(lockoutStr);
-      if (lockoutMs != null) {
-        _lockoutUntil = DateTime.fromMillisecondsSinceEpoch(lockoutMs);
-        if (DateTime.now().isAfter(_lockoutUntil!)) {
-          _lockoutUntil = null;
-          await _secureStorage.delete(key: _keyLockoutUntil);
+      final failedStr = await _secureStorage.read(key: _keyFailedAttempts);
+      _failedAttempts = failedStr != null ? (int.tryParse(failedStr) ?? 0) : 0;
+
+      final pinEnStr = await _secureStorage.read(key: _keyPinEnabled);
+      if (pinEnStr != null) {
+        _pinEnabled = pinEnStr == 'true';
+      } else {
+        _pinEnabled = prefs.getBool(_keyPinEnabled) ?? false;
+        if (_pinEnabled) {
+          await _secureStorage.write(key: _keyPinEnabled, value: 'true');
         }
       }
-    }
 
-    if (_pinEnabled && hasPin) {
-      isLockedNotifier.value = true;
+      final bioEnStr = await _secureStorage.read(key: _keyBiometricEnabled);
+      if (bioEnStr != null) {
+        _biometricEnabled = bioEnStr == 'true';
+      } else {
+        _biometricEnabled = prefs.getBool(_keyBiometricEnabled) ?? false;
+      }
+
+      final lockoutStr = await _secureStorage.read(key: _keyLockoutUntil);
+      if (lockoutStr != null) {
+        final lockoutMs = int.tryParse(lockoutStr);
+        if (lockoutMs != null) {
+          _lockoutUntil = DateTime.fromMillisecondsSinceEpoch(lockoutMs);
+          if (DateTime.now().isAfter(_lockoutUntil!)) {
+            _lockoutUntil = null;
+            await _secureStorage.delete(key: _keyLockoutUntil);
+          }
+        }
+      }
+
+      if (_pinEnabled && hasPin) {
+        isLockedNotifier.value = true;
+      }
+    } catch (e) {
+      // Keystore corruption or decryption failure after OS backup restore
+      debugPrint('SecurityService: Keystore read/decryption error encountered during init: $e');
+      _cachedPinHash = null;
+      _cachedPinSalt = null;
+      _cachedPinIterations = null;
+      _pinEnabled = false;
+      _biometricEnabled = false;
+      _failedAttempts = 0;
+      _lockoutUntil = null;
+      isLockedNotifier.value = false;
+      forceReloginNotifier.value = true;
     }
 
     WidgetsBinding.instance.addObserver(this);
@@ -290,10 +308,16 @@ class SecurityService with WidgetsBindingObserver {
       return false;
     }
 
-    _cachedPinHash ??= await _secureStorage.read(key: _keyPinHash);
-    _cachedPinSalt ??= await _secureStorage.read(key: _keyPinSalt);
-    final iterStr = await _secureStorage.read(key: _keyPinIterations);
-    _cachedPinIterations ??= iterStr != null ? int.tryParse(iterStr) : null;
+    try {
+      _cachedPinHash ??= await _secureStorage.read(key: _keyPinHash);
+      _cachedPinSalt ??= await _secureStorage.read(key: _keyPinSalt);
+      final iterStr = await _secureStorage.read(key: _keyPinIterations);
+      _cachedPinIterations ??= iterStr != null ? int.tryParse(iterStr) : null;
+    } catch (e) {
+      debugPrint('SecurityService: Keystore read error during verifyPin: $e');
+      _cachedPinHash = null;
+      return false;
+    }
 
     if (_cachedPinHash == null) return false;
 
@@ -445,6 +469,39 @@ class SecurityService with WidgetsBindingObserver {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyFailedAttempts);
     await prefs.remove(_keyLockoutUntil);
+  }
+
+  /// Gracefully signs out user and cleans up state when Keystore desynchronization or corruption occurs
+  Future<void> triggerSafeSignOut() async {
+    try {
+      await _secureStorage.deleteAll();
+    } catch (e) {
+      debugPrint('SecurityService: Failed to deleteAll on secure storage: $e');
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyPinEnabled, false);
+      await prefs.setBool(_keyBiometricEnabled, false);
+      await prefs.remove(_keyLegacyPin);
+      await prefs.remove(_keyPinHash);
+      await prefs.remove(_keyPinSalt);
+    } catch (_) {}
+
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (e) {
+      debugPrint('SecurityService: Supabase signOut ignored during keystore fallback: $e');
+    }
+
+    _cachedPinHash = null;
+    _cachedPinSalt = null;
+    _cachedPinIterations = null;
+    _pinEnabled = false;
+    _biometricEnabled = false;
+    _failedAttempts = 0;
+    _lockoutUntil = null;
+    isLockedNotifier.value = false;
+    forceReloginNotifier.value = false;
   }
 
   @visibleForTesting

@@ -101,9 +101,6 @@ class _PinLockScreenState extends State<PinLockScreen>
 
   void _handlePinComplete() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-
     final security = SecurityService.instance;
 
     switch (widget.mode) {
@@ -482,10 +479,24 @@ class _PinLockScreenState extends State<PinLockScreen>
                         ),
                       )
                     : _isLoading
-                        ? SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: primary),
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: primary),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Memproses PIN...',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: textSecondary,
+                                ),
+                              ),
+                            ],
                           )
                         : null,
               ),
@@ -494,46 +505,53 @@ class _PinLockScreenState extends State<PinLockScreen>
             const Spacer(flex: 2),
 
             // Custom Numeric Keypad
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Column(
-                children: [
-                  _buildKeypadRow(['1', '2', '3'], textPrimary, isDark),
-                  const SizedBox(height: 16),
-                  _buildKeypadRow(['4', '5', '6'], textPrimary, isDark),
-                  const SizedBox(height: 16),
-                  _buildKeypadRow(['7', '8', '9'], textPrimary, isDark),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            IgnorePointer(
+              ignoring: _isLoading,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: _isLoading ? 0.6 : 1.0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Column(
                     children: [
-                      // Biometric / Forgot PIN button
-                      if (widget.mode == PinMode.unlock && SecurityService.instance.isBiometricEnabled)
-                        _buildKeypadButton(
-                          child: const Icon(Icons.fingerprint_rounded, size: 28, color: AppColors.emerald),
-                          onTap: _simulateBiometric,
-                          isDark: isDark,
-                        )
-                      else if (widget.mode == PinMode.unlock)
-                        TextButton(
-                          onPressed: _showForgotPinDialog,
-                          child: const Text('Lupa?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                        )
-                      else
-                        const SizedBox(width: 72, height: 72),
+                      _buildKeypadRow(['1', '2', '3'], textPrimary, isDark),
+                      const SizedBox(height: 16),
+                      _buildKeypadRow(['4', '5', '6'], textPrimary, isDark),
+                      const SizedBox(height: 16),
+                      _buildKeypadRow(['7', '8', '9'], textPrimary, isDark),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Biometric / Forgot PIN button
+                          if (widget.mode == PinMode.unlock && SecurityService.instance.isBiometricEnabled)
+                            _buildKeypadButton(
+                              child: const Icon(Icons.fingerprint_rounded, size: 28, color: AppColors.emerald),
+                              onTap: _simulateBiometric,
+                              isDark: isDark,
+                            )
+                          else if (widget.mode == PinMode.unlock)
+                            TextButton(
+                              onPressed: _showForgotPinDialog,
+                              child: const Text('Lupa?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                            )
+                          else
+                            const SizedBox(width: 72, height: 72),
 
-                      // Digit 0
-                      _buildDigitButton('0', textPrimary, isDark),
+                          // Digit 0
+                          _buildDigitButton('0', textPrimary, isDark),
 
-                      // Backspace
-                      _buildKeypadButton(
-                        child: Icon(Icons.backspace_outlined, size: 22, color: textPrimary),
-                        onTap: _onBackspace,
-                        isDark: isDark,
+                          // Backspace
+                          _buildKeypadButton(
+                            child: Icon(Icons.backspace_outlined, size: 22, color: textPrimary),
+                            onTap: _onBackspace,
+                            isDark: isDark,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
 
