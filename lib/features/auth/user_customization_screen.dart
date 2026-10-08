@@ -113,16 +113,20 @@ class _UserCustomizationScreenState extends State<UserCustomizationScreen>
                 children: [
                   Row(
                     children: [
-                      Text(
-                        'Halo, ${widget.userName.split(' ').first} 👋',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: textPrimary,
+                      Expanded(
+                        child: Text(
+                          'Halo, ${widget.userName.split(' ').first} 👋',
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       Text(
                         '${_step + 1}/$_totalSteps',
                         style: TextStyle(color: textSecondary, fontSize: 13, fontWeight: FontWeight.w600),

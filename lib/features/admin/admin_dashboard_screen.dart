@@ -249,13 +249,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildKPIs(bool isDark) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final aspectRatio = screenWidth < 360 ? 0.95 : 1.1;
+
     return GridView.count(
       shrinkWrap: true,
       crossAxisCount: 2,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      childAspectRatio: 1.15,
+      childAspectRatio: aspectRatio,
       children: [
         _kpiCard('Users', _totalUsers.toString(), _totalUsers > 0 ? '+12%' : '', Icons.people_alt_rounded, Colors.blue, isDark),
         _kpiCard('Active Pro', _activeSubs.toString(), _activeSubs > 0 ? '+5%' : '', Icons.star_rounded, Colors.orange, isDark),
@@ -278,7 +281,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           child: Opacity(
             opacity: anim,
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkCard : Colors.white,
                 borderRadius: BorderRadius.circular(20),

@@ -2,7 +2,7 @@
 
 > **Track Your Money, Shape Your Future**  
 > *SaaS Multi-Tenant Personal & Micro-Business Financial Ledger Platform*  
-> *Arsitek & Pengembang: Abrar Astafaraiz • Versi: 1.0.0 (Build 1)*
+> *Arsitek & Pengembang: Abrar Astafaraiz • Versi: 2.0.0 (Build 2)*
 
 ---
 

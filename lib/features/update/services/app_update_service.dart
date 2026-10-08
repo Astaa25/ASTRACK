@@ -141,7 +141,7 @@ class AppUpdateService {
       final buildNum = int.tryParse(pkg.buildNumber) ?? 1;
       return (pkg.version, buildNum);
     } catch (_) {
-      return ('1.0.0', 1);
+      return ('2.0.0', 2);
     }
   }
 }

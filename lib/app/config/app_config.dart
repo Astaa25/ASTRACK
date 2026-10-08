@@ -3,8 +3,8 @@
 class AppConfig {
   static const String appName = 'ASTRACK';
   static const String tagline = 'Track Your Money, Shape Your Future';
-  static const String version = '1.0.0';
-  static const int buildNumber = 1;
+  static const String version = '2.0.0';
+  static const int buildNumber = 2;
   static const String author = 'Abrar Astafaraiz';
   static const String copyright = '© 2026 ASTRACK. All rights reserved.';
   static const String website = 'https://astrack.app';

@@ -336,263 +336,267 @@ class _PinLockScreenState extends State<PinLockScreen>
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Top Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  if (widget.mode != PinMode.unlock)
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded, color: textPrimary, size: 20),
-                      onPressed: () => Navigator.of(context).pop(),
-                    )
-                  else
-                    const SizedBox(width: 48),
-                  const Spacer(),
-                  // Logo Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: primary.withAlpha(20),
-                      borderRadius: BorderRadius.circular(20),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Column(
+            children: [
+              // Top Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    if (widget.mode != PinMode.unlock)
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios_new_rounded, color: textPrimary, size: 20),
+                        onPressed: () => Navigator.of(context).pop(),
+                      )
+                    else
+                      const SizedBox(width: 48),
+                    const Spacer(),
+                    // Logo Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: primary.withAlpha(20),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.shield_rounded, color: primary, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            'ASTRACK SAFE',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: primary),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    const Spacer(),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Icon & Header
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [primary, primary.withAlpha(200)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primary.withAlpha(70),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  widget.mode == PinMode.unlock ? Icons.lock_outline_rounded : Icons.lock_reset_rounded,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                _getTitle(),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  fontFamily: 'Plus Jakarta Sans',
+                  color: textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  _getSubtitle(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: textSecondary),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // 6 PIN Dots (Animated with shake on error)
+              AnimatedBuilder(
+                animation: _shakeAnimCtrl,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(_shakeAnim.value * (1 - _shakeAnimCtrl.value), 0),
+                    child: child,
+                  );
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(6, (i) {
+                    final isFilled = i < _pin.length;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      width: isFilled ? 16 : 12,
+                      height: isFilled ? 16 : 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isFilled ? primary : Colors.transparent,
+                        border: Border.all(
+                          color: isFilled ? primary : textSecondary.withAlpha(80),
+                          width: 2,
+                        ),
+                        boxShadow: isFilled
+                            ? [
+                                BoxShadow(
+                                  color: primary.withAlpha(120),
+                                  blurRadius: 10,
+                                  spreadRadius: 1,
+                                ),
+                              ]
+                            : null,
+                      ),
+                    );
+                  }),
+                ),
+              ),
+
+              // Error message
+              SizedBox(
+                height: 28,
+                child: Center(
+                  child: _errorMessage.isNotEmpty
+                      ? Text(
+                          _errorMessage,
+                          style: const TextStyle(
+                            color: AppColors.expense,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                      : _isLoading
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: primary),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Memproses PIN...',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: textSecondary,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : null,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Custom Numeric Keypad
+              IgnorePointer(
+                ignoring: _isLoading,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: _isLoading ? 0.6 : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
                       children: [
-                        Icon(Icons.shield_rounded, color: primary, size: 16),
-                        const SizedBox(width: 6),
-                        Text(
-                          'ASTRACK SAFE',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: primary),
+                        _buildKeypadRow(['1', '2', '3'], textPrimary, isDark),
+                        const SizedBox(height: 12),
+                        _buildKeypadRow(['4', '5', '6'], textPrimary, isDark),
+                        const SizedBox(height: 12),
+                        _buildKeypadRow(['7', '8', '9'], textPrimary, isDark),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            // Biometric / Forgot PIN button
+                            if (widget.mode == PinMode.unlock && SecurityService.instance.isBiometricEnabled)
+                              _buildKeypadButton(
+                                child: const Icon(Icons.fingerprint_rounded, size: 28, color: AppColors.emerald),
+                                onTap: _simulateBiometric,
+                                isDark: isDark,
+                              )
+                            else if (widget.mode == PinMode.unlock)
+                              TextButton(
+                                onPressed: _showForgotPinDialog,
+                                child: const Text('Lupa?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                              )
+                            else
+                              const SizedBox(width: 64, height: 64),
+
+                            // Digit 0
+                            _buildDigitButton('0', textPrimary, isDark),
+
+                            // Backspace
+                            _buildKeypadButton(
+                              child: Icon(Icons.backspace_outlined, size: 22, color: textPrimary),
+                              onTap: _onBackspace,
+                              isDark: isDark,
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  const Spacer(),
-                  const SizedBox(width: 48),
-                ],
-              ),
-            ),
-
-            const Spacer(flex: 1),
-
-            // Icon & Header
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [primary, primary.withAlpha(200)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: primary.withAlpha(70),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
               ),
-              child: Icon(
-                widget.mode == PinMode.unlock ? Icons.lock_outline_rounded : Icons.lock_reset_rounded,
-                color: Colors.white,
-                size: 34,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              _getTitle(),
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                fontFamily: 'Plus Jakarta Sans',
-                color: textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Text(
-                _getSubtitle(),
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: textSecondary),
-              ),
-            ),
 
-            const SizedBox(height: 28),
+              const SizedBox(height: 10),
 
-            // 6 PIN Dots (Animated with shake on error)
-            AnimatedBuilder(
-              animation: _shakeAnimCtrl,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(_shakeAnim.value * (1 - _shakeAnimCtrl.value), 0),
-                  child: child,
-                );
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(6, (i) {
-                  final isFilled = i < _pin.length;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
-                    width: isFilled ? 18 : 14,
-                    height: isFilled ? 18 : 14,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isFilled ? primary : Colors.transparent,
-                      border: Border.all(
-                        color: isFilled ? primary : textSecondary.withAlpha(80),
-                        width: 2,
-                      ),
-                      boxShadow: isFilled
-                          ? [
-                              BoxShadow(
-                                color: primary.withAlpha(120),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                              ),
-                            ]
-                          : null,
-                    ),
-                  );
-                }),
-              ),
-            ),
-
-            // Error message
-            SizedBox(
-              height: 32,
-              child: Center(
-                child: _errorMessage.isNotEmpty
-                    ? Text(
-                        _errorMessage,
-                        style: const TextStyle(
-                          color: AppColors.expense,
+              if (widget.mode == PinMode.unlock)
+                Column(
+                  children: [
+                    TextButton(
+                      onPressed: _showForgotPinDialog,
+                      child: Text(
+                        'Lupa PIN Keamanan?',
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
+                          color: textSecondary,
                         ),
-                      )
-                    : _isLoading
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: primary),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Memproses PIN...',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: textSecondary,
-                                ),
-                              ),
-                            ],
-                          )
-                        : null,
-              ),
-            ),
-
-            const Spacer(flex: 2),
-
-            // Custom Numeric Keypad
-            IgnorePointer(
-              ignoring: _isLoading,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
-                opacity: _isLoading ? 0.6 : 1.0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Column(
-                    children: [
-                      _buildKeypadRow(['1', '2', '3'], textPrimary, isDark),
-                      const SizedBox(height: 16),
-                      _buildKeypadRow(['4', '5', '6'], textPrimary, isDark),
-                      const SizedBox(height: 16),
-                      _buildKeypadRow(['7', '8', '9'], textPrimary, isDark),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          // Biometric / Forgot PIN button
-                          if (widget.mode == PinMode.unlock && SecurityService.instance.isBiometricEnabled)
-                            _buildKeypadButton(
-                              child: const Icon(Icons.fingerprint_rounded, size: 28, color: AppColors.emerald),
-                              onTap: _simulateBiometric,
-                              isDark: isDark,
-                            )
-                          else if (widget.mode == PinMode.unlock)
-                            TextButton(
-                              onPressed: _showForgotPinDialog,
-                              child: const Text('Lupa?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                            )
-                          else
-                            const SizedBox(width: 72, height: 72),
-
-                          // Digit 0
-                          _buildDigitButton('0', textPrimary, isDark),
-
-                          // Backspace
-                          _buildKeypadButton(
-                            child: Icon(Icons.backspace_outlined, size: 22, color: textPrimary),
-                            onTap: _onBackspace,
-                            isDark: isDark,
-                          ),
-                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        final finance = Provider.of<FinanceProvider>(context, listen: false);
+                        SecurityService.instance.unlockApp();
+                        finance.logout();
+                        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      },
+                      icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+                      label: const Text('Login dengan akun lain'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.expense,
+                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
 
-            const Spacer(flex: 1),
-
-            if (widget.mode == PinMode.unlock)
-              Column(
-                children: [
-                  TextButton(
-                    onPressed: _showForgotPinDialog,
-                    child: Text(
-                      'Lupa PIN Keamanan?',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: textSecondary,
-                      ),
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () {
-                      final finance = Provider.of<FinanceProvider>(context, listen: false);
-                      SecurityService.instance.unlockApp();
-                      finance.logout();
-                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                        (route) => false,
-                      );
-                    },
-                    icon: const Icon(Icons.swap_horiz_rounded, size: 16),
-                    label: const Text('Login dengan akun lain'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.expense,
-                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ],
-              ),
-
-            const SizedBox(height: 12),
-          ],
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );

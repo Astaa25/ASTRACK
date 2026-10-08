@@ -1,6 +1,6 @@
 # ASTRACK — TRACK YOUR MONEY
 > **Dokumentasi Komprehensif Arsitektur, Sistem, Manual Fitur, Keamanan, dan Sumber Kebenaran Kode Sumber (Source Code Master Audit)**  
-> *Versi Aplikasi: 1.0.0 (Build 1) • Framework: Flutter SDK 3.x & Supabase PostgreSQL Enterprise Engine*  
+> *Versi Aplikasi: 2.0.0 (Build 2) • Framework: Flutter SDK 3.x & Supabase PostgreSQL Enterprise Engine*  
 > *Penulis: Abrar Astafaraiz • Lisensi: © 2026 ASTRACK. All rights reserved.*
 
 ---
@@ -103,7 +103,7 @@
 * **Tagline**: *"Track Your Money, Shape Your Future"*
 * **Kategori Aplikasi**: Financial Technology (Fintech) • Personal & Small Business Finance Management • SaaS Multi-Tenant Platform
 * **Penulis / Arsitek**: Abrar Astafaraiz
-* **Versi Rilis**: 1.0.0 (Build 1)
+* **Versi Rilis**: 2.0.0 (Build 2)
 * **Copyright**: © 2026 ASTRACK. All rights reserved.
 * **Tujuan Strategis**: Memberikan solusi holistik pengelolaan aset dan arus kas pribadi maupun bisnis mikro dalam satu aplikasi multi-platform yang cepat, privat, indah, dan deterministik. Menggabungkan pencatatan multi-rekening (*multi-wallet*), perencanaan anggaran dinamis (*budgeting*), komitmen masa depan (*savings goals*), tagihan berkala (*recurring bills*), integrasi kecerdasan buatan (*AI Financial Advisor & OCR Vision*), gerbang pembayaran multi-channel (*Midtrans, Xendit, Stripe, Manual QRIS*), serta panel kontrol administrasi SaaS (*Super Admin Dashboard*).
 * **Platform Target**: **Android saja** (Kanal distribusi resmi mandiri berupa berkas `.apk` via Telegram & WhatsApp). Web dan Windows Desktop hanya digunakan oleh pengembang untuk kebutuhan pratinjau pengembangan (bukan target pengguna). Pemindai nota OCR on-device (`google_mlkit_text_recognition`) didukung pada platform target Android. Platform iOS tidak didukung.

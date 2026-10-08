@@ -564,62 +564,66 @@ class _AdminAppVersionsScreenState extends State<AdminAppVersionsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: primary.withAlpha(25),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      'v${ver['version_name']} +$buildNum',
-                                      style: TextStyle(
-                                        fontFamily: 'Plus Jakarta Sans',
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w800,
-                                        color: primary,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  if (isRev)
+                              Expanded(
+                                child: Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: AppColors.expense.withAlpha(25),
-                                        borderRadius: BorderRadius.circular(6),
+                                        color: primary.withAlpha(25),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: const Text(
-                                        'REVOKED',
-                                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.expense),
-                                      ),
-                                    )
-                                  else if (isPub)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.emerald.withAlpha(25),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: const Text(
-                                        'PUBLISHED',
-                                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.emerald),
-                                      ),
-                                    )
-                                  else
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.withAlpha(25),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: const Text(
-                                        'DRAFT',
-                                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey),
+                                      child: Text(
+                                        'v${ver['version_name']} +$buildNum',
+                                        style: TextStyle(
+                                          fontFamily: 'Plus Jakarta Sans',
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: primary,
+                                        ),
                                       ),
                                     ),
-                                ],
+                                    if (isRev)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.expense.withAlpha(25),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Text(
+                                          'REVOKED',
+                                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.expense),
+                                        ),
+                                      )
+                                    else if (isPub)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.emerald.withAlpha(25),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Text(
+                                          'PUBLISHED',
+                                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.emerald),
+                                        ),
+                                      )
+                                    else
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.withAlpha(25),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Text(
+                                          'DRAFT',
+                                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.edit_outlined, size: 20),
@@ -648,10 +652,13 @@ class _AdminAppVersionsScreenState extends State<AdminAppVersionsScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           const Divider(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 4,
+                            alignment: WrapAlignment.spaceBetween,
                             children: [
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text('Publish', style: TextStyle(fontSize: 12, color: textPrimary)),
                                   Switch(
@@ -662,6 +669,7 @@ class _AdminAppVersionsScreenState extends State<AdminAppVersionsScreen> {
                                 ],
                               ),
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     'Revoke',

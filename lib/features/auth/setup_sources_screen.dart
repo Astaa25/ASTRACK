@@ -212,12 +212,16 @@ class _SetupSourcesScreenState extends State<SetupSourcesScreen> {
                       children: [
                         Icon(Icons.auto_awesome_rounded, size: 18, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
                         const SizedBox(width: 8),
-                        Text(
-                          'Input Cepat dengan Bahasa Alami',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: isDark ? AppColors.darkPrimary : AppColors.lightDarkGreen,
+                        Expanded(
+                          child: Text(
+                            'Input Cepat dengan Bahasa Alami',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? AppColors.darkPrimary : AppColors.lightDarkGreen,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

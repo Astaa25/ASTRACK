@@ -312,7 +312,7 @@ void main() {
       final content = pubspecFile.readAsStringSync();
       final versionMatch = RegExp(r'version:\s+(\d+\.\d+\.\d+\+\d+)').firstMatch(content);
       expect(versionMatch, isNotNull);
-      expect(versionMatch!.group(1), equals('1.0.0+1'));
+      expect(versionMatch!.group(1), equals('2.0.0+2'));
     });
 
     test('build.gradle.kts targets modern Java 17 bytecode', () {

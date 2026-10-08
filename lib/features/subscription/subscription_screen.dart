@@ -31,7 +31,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     setState(() => _isLoading = true);
     await _saas.initializeDatabase();
     
-    final currentUser = Supabase.instance.client.auth.currentUser;
+    User? currentUser;
+    try {
+      currentUser = Supabase.instance.client.auth.currentUser;
+    } catch (_) {}
     final userId = currentUser?.id ?? 'current_user_123';
     
     final sub = await _saas.getUserSubscription(userId);
@@ -266,7 +269,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(_currentPlan?.name ?? 'Free', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textColor, fontFamily: 'Plus Jakarta Sans')),
+              Expanded(
+                child: Text(
+                  _currentPlan?.name ?? 'Free',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor, fontFamily: 'Plus Jakarta Sans'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
@@ -284,7 +295,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             children: [
               Icon(Icons.calendar_today_rounded, size: 16, color: isPro ? Colors.white70 : (isDark ? AppColors.darkMuted : AppColors.lightTextSecondary)),
               const SizedBox(width: 8),
-              Text('Expires: $expiresText', style: TextStyle(fontSize: 13, color: isPro ? Colors.white : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary))),
+              Expanded(
+                child: Text(
+                  'Expires: $expiresText',
+                  style: TextStyle(fontSize: 13, color: isPro ? Colors.white : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
         ],

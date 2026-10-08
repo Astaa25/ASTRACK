@@ -4,6 +4,30 @@ Seluruh riwayat perubahan, pembaruan versi, dan catatan rilis resmi aplikasi AST
 
 ---
 
+## [v2.0.0+2] — 2026-10-08 (Rilis Utama / Major Release)
+
+### 🚀 Peningkatan Utama & Perbaikan Bug
+* **Resolusi Komprehensif RenderFlex / Pixel Overflow (Anti-Overflow Hardening)**:
+  * Audit menyeluruh dan resolusi 100% dari seluruh potensi *pixel overflow* pada layar ultra-kompak (320dp hingga 360dp) di seluruh modul aplikasi.
+  * `AIChatScreen`: Perbaikan tata letak header AppBar dengan `Expanded` dan teks terpotong rapi dengan elipsis.
+  * `AdminDashboardScreen`: Penyesuaian rasio kartu grid KPI bawah responsif terhadap lebar layar (<360dp).
+  * `AdminAppVersionsScreen`: Penyesuaian tata letak kartu rilis versi dengan `Wrap` dan pembungkusan badge adaptif.
+  * `BrandIllustrations`: Perbaikan ilustrasi kartu debit onboarding dengan pelindung elipsis pada nama pemilik kartu.
+  * `WelcomeScreen` & `OnboardingScreen`: Penerapan `LayoutBuilder` + `SingleChildScrollView` + `ConstrainedBox` responsif mencegah overflow pada perangkat Android beresolusi kompak.
+  * `PinLockScreen`: Keypad responsif dan scrollable layout yang adaptif terhadap tinggi viewport.
+  * `SetupSourcesScreen`: Perbaikan baris header prompt AI dengan `Expanded` dan perlindungan elipsis.
+  * `UserCustomizationScreen`: Perbaikan header salam multi-step dengan `Expanded` responsif.
+  * `ReportsScreen`: Perbaikan baris header ringkasan bulanan dengan `Expanded`.
+  * `SubscriptionScreen`: Perbaikan kartu ringkasan paket dan masa berlaku dengan pembungkusan fleksibel aman.
+* **Integrasi Enterprise Backend & Keamanan Cloud Supabase**:
+  * Eksekusi dan validasi 8 berkas migrasi skema SQL PostgreSQL: registrasi modul versi aplikasi, log audit, proteksi RLS multi-tenant, dan otorisasi Super Admin.
+  * Resiliensi luring dan offline-first pada pengecekan akun langganan dengan penanganan aman tanpa crash saat Supabase belum diinisialisasi.
+* **Kualitas Kode & Pengujian Otomatis**:
+  * 0 issues / 0 warnings pada `flutter analyze`.
+  * Seluruh pengujian otomatis pixel overflow (45 screen tests) lulus 100%.
+
+---
+
 ## [v1.0.0+1] — 2026-10-06 (Beta Terbuka / Rilis Mandiri)
 
 ### 🚀 Fitur Baru & Peningkatan Utama

@@ -357,9 +357,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     children: [
                       Icon(Icons.bar_chart_rounded, color: primary, size: 20),
                       const SizedBox(width: 8),
-                      Text(
-                        'Ringkasan ${monthFmt.format(_selectedMonth)}',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textPrimary),
+                      Expanded(
+                        child: Text(
+                          'Ringkasan ${monthFmt.format(_selectedMonth)}',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: textPrimary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),

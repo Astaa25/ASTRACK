@@ -200,7 +200,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
             // ── Bottom bar ────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Row(
                 children: [
                   // Page dots
@@ -211,8 +211,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
                         margin: const EdgeInsets.only(right: 6),
-                        width: isActive ? 24 : 7,
-                        height: 7,
+                        width: isActive ? 20 : 6,
+                        height: 6,
                         decoration: BoxDecoration(
                           color: isActive
                               ? Color(_slides[_currentPage].colorHex)
@@ -230,7 +230,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     onTap: _next,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: Color(_slides[_currentPage].colorHex),
                         borderRadius: BorderRadius.circular(30),
@@ -250,11 +250,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
-                              fontSize: 14,
+                              fontSize: 13,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
                         ],
                       ),
                     ),
@@ -284,7 +284,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         children: [
           // ── Hero illustration ──────────────────────────────────────────
           Expanded(
-            flex: 5,
+            flex: 4,
             child: AnimatedScale(
               scale: isCurrent ? 1.0 : 0.92,
               duration: const Duration(milliseconds: 350),
@@ -313,16 +313,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     // Feature chips
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         spacing: 8,
-                        runSpacing: 8,
+                        runSpacing: 6,
                         children: slide.features.map((f) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
                             color: slideColor.withAlpha(25),
                             borderRadius: BorderRadius.circular(20),
@@ -336,7 +336,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               Text(f,
                                   style: TextStyle(
                                     color: slideColor,
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                   )),
                             ],
@@ -350,44 +350,47 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // ── Text content ───────────────────────────────────────────────
           Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  slide.subtitle.toUpperCase(),
-                  style: TextStyle(
-                    color: slideColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
+            flex: 4,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    slide.subtitle.toUpperCase(),
+                    style: TextStyle(
+                      color: slideColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  slide.title,
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    color: textPrimary,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    height: 1.2,
+                  const SizedBox(height: 6),
+                  Text(
+                    slide.title,
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      color: textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      height: 1.2,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  slide.description,
-                  style: TextStyle(
-                    color: textSecondary,
-                    fontSize: 14,
-                    height: 1.6,
+                  const SizedBox(height: 8),
+                  Text(
+                    slide.description,
+                    style: TextStyle(
+                      color: textSecondary,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
