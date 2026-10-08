@@ -13,6 +13,7 @@ import '../../core/utils/currency_formatter.dart';
 import '../../core/widgets/app_button.dart';
 import '../subscription/models/astra_feature.dart';
 import '../subscription/widgets/upgrade_paywall_sheet.dart';
+import '../../widgets/liquid_loader.dart';
 
 class ReceiptScannerScreen extends StatefulWidget {
   const ReceiptScannerScreen({super.key});
@@ -566,29 +567,11 @@ class _ReceiptScannerScreenState extends State<ReceiptScannerScreen> with Single
           // Loading overlay saat AI sedang memproses teks struk
           if (_isScanning)
             Container(
-              color: Colors.black87,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkCard : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircularProgressIndicator(color: AppColors.income),
-                      const SizedBox(height: 16),
-                      Text(
-                        '✨ Membaca teks struk...',
-                        style: TextStyle(
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
+              color: Colors.black.withOpacity(0.75),
+              child: const Center(
+                child: AstrackLiquidLoader(
+                  initialMessage: 'Menganalisis & membaca teks struk (OCR)...',
+                  size: 80,
                 ),
               ),
             ),

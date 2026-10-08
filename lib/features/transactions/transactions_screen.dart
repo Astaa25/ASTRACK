@@ -11,6 +11,7 @@ import 'add_transaction_sheet.dart';
 import 'csv_import_screen.dart';
 import '../subscription/models/astra_feature.dart';
 import '../subscription/services/feature_gate_service.dart';
+import '../../widgets/liquid_loader.dart';
 
 enum TransactionSortOrder {
   newest,
@@ -603,22 +604,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     )
                   : ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 84),
                       itemCount: dailyGroups.keys.length + (_displayedCount < _totalFilteredCount ? 1 : 0),
                       itemBuilder: (context, groupIndex) {
                         // Pagination loading tile at bottom
                         if (groupIndex == dailyGroups.keys.length) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
                             child: Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                                ),
-                              ),
+                              child: AstrackLiquidLoader.compact(size: 24),
                             ),
                           );
                         }

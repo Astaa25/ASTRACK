@@ -206,24 +206,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final theme = Provider.of<ThemeProvider>(context);
     final isDark = theme.isDarkMode;
     final isTabletOrDesktop = context.isTabletOrLarger;
-
-    Widget bodyWidget;
-    switch (_currentTabIndex) {
-      case 0:
-        bodyWidget = _buildHomeDashboard(context, isDark);
-        break;
-      case 1:
-        bodyWidget = const TransactionsScreen();
-        break;
-      case 2:
-        bodyWidget = const StatisticsScreen();
-        break;
-      case 3:
-        bodyWidget = _buildMoreMenu(context, isDark);
-        break;
-      default:
-        bodyWidget = _buildHomeDashboard(context, isDark);
-    }
+    final tabPages = [
+      _buildHomeDashboard(context, isDark),
+      const TransactionsScreen(),
+      const StatisticsScreen(),
+      _buildMoreMenu(context, isDark),
+    ];
 
     if (isTabletOrDesktop) {
       return Scaffold(
@@ -276,7 +264,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
             const VerticalDivider(thickness: 1, width: 1),
-            Expanded(child: bodyWidget),
+            Expanded(
+              child: _FadeIndexedStack(
+                index: _currentTabIndex.clamp(0, 3),
+                children: tabPages,
+              ),
+            ),
           ],
         ),
       );
@@ -285,7 +278,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Stack(
       children: [
         Scaffold(
-          body: bodyWidget,
+          body: _FadeIndexedStack(
+            index: _currentTabIndex.clamp(0, 3),
+            children: tabPages,
+          ),
           bottomNavigationBar: ModernBottomNav(
             currentIndex: _currentTabIndex,
             isDark: isDark,
@@ -317,7 +313,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onRefresh: () async => finance.loadAllData(),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 84),
           child: AdaptiveContainer(
             maxWidth: 900,
             child: Column(
@@ -624,11 +620,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               return InkWell(
                 borderRadius: BorderRadius.circular(16),
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const TransactionsScreen(),
-                    ),
-                  );
+                  setState(() => _currentTabIndex = 1);
                 },
                 child: Container(
                   width: 160,
@@ -782,9 +774,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final healthScore = finance.financialHealthScore;
     return InkWell(
       borderRadius: BorderRadius.circular(18),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const StatisticsScreen()),
-      ),
+      onTap: () => setState(() => _currentTabIndex = 2),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
@@ -1560,8 +1550,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               subtitle: 'Daftar transaksi kronologis lengkap',
               icon: Icons.receipt_long_rounded,
               isDark: isDark,
-              onTap: () => Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (_) => const TransactionsScreen())),
+              onTap: () => setState(() => _currentTabIndex = 1),
             ),
             _buildMenuItem(
               title: 'Sumber Dana (Accounts)',
@@ -1624,7 +1613,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 84),
           ],
         ),
       ),
@@ -1674,10 +1663,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         border: Border.all(
             color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
       ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: ListTile(
+          onTap: onTap,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
@@ -1704,6 +1696,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     : AppColors.lightTextSecondary)),
         trailing: const Icon(Icons.chevron_right_rounded, size: 20),
       ),
+    ),
     );
   }
 }
+
+/// Smooth fade transition wrapper for IndexedStack to ensure buttery tab switching
+class _FadeIndexedStack extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+
+  const _FadeIndexedStack({
+    required this.index,
+    required this.children,
+  });
+
+  @override
+  State<_FadeIndexedStack> createState() => _FadeIndexedStackState();
+}
+
+class _FadeIndexedStackState extends State<_FadeIndexedStack>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 240),
+    )..forward();
+  }
+
+  @override
+  void didUpdateWidget(_FadeIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.index != oldWidget.index) {
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutCubic,
+      ),
+      child: IndexedStack(
+        index: widget.index,
+        children: widget.children,
+      ),
+    );
+  }
+}
+

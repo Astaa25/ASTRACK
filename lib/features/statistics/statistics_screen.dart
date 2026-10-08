@@ -196,7 +196,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   ) {
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 84),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Period chips
           SingleChildScrollView(
@@ -774,7 +774,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       Color cardColor, Color border, Color textPrimary, Color textSecondary) {
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 84),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('Tren 6 Bulan Terakhir',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textPrimary)),
@@ -977,7 +977,7 @@ class _StatisticsScreenState extends State<StatisticsScreen>
   ) {
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 84),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -6,6 +6,7 @@ import '../../models/saas_models.dart';
 import '../../app/theme/app_colors.dart';
 import 'models/astra_feature.dart';
 import 'widgets/upgrade_paywall_sheet.dart';
+import '../../widgets/liquid_loader.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -202,7 +203,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         iconTheme: IconThemeData(color: textP),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: primary))
+          ? const Center(child: AstrackLiquidLoader.full())
           : RefreshIndicator(
               onRefresh: _loadData,
               color: primary,

@@ -7,6 +7,7 @@ import '../../providers/finance_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/speech/speech_service.dart';
 import '../../core/widgets/app_button.dart';
+import '../../widgets/liquid_loader.dart';
 
 enum VoiceState {
   idle,        // Belum mulai
@@ -621,11 +622,11 @@ class _VoiceTransactionSheetState extends State<VoiceTransactionSheet>
       case VoiceState.processing:
         return Column(
           children: [
-            CircularProgressIndicator(color: primary, strokeWidth: 3),
-            const SizedBox(height: 14),
-            Text('AI sedang memproses…',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: primaryText)),
-            const SizedBox(height: 6),
+            const AstrackLiquidLoader(
+              initialMessage: 'AI sedang menganalisis audio & mengekstraksi data...',
+              size: 64,
+            ),
+            const SizedBox(height: 10),
             if (_transcript.isNotEmpty)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

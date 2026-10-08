@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../widgets/liquid_loader.dart';
 
 class AppButton extends StatefulWidget {
   final String label;
@@ -96,13 +97,9 @@ class _AppButtonState extends State<AppButton> with SingleTickerProviderStateMix
       ),
       alignment: Alignment.center,
       child: widget.isLoading
-          ? SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                color: fg,
-                strokeWidth: 2.5,
-              ),
+          ? AstrackLiquidLoader.compact(
+              size: 22,
+              accentColor: fg,
             )
           : Row(
               mainAxisSize: MainAxisSize.min,
