@@ -20,7 +20,7 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   String _installedVersion = AppConfig.version;
-  int _installedBuild = 1;
+  int _installedBuild = AppConfig.buildNumber;
   bool _isCheckingUpdate = false;
 
   // Stable release certificate SHA-256 fingerprint for APK verification
