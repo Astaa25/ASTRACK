@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Supabase Edge Function: payment-webhook
 // Secure Multi-Gateway Webhook Processor (Zero-Secret Client Architecture)
 // Deno TypeScript Runtime for Supabase Functions
@@ -24,7 +25,7 @@ async function sha512Hex(message: string): Promise<string> {
   const data = encoder.encode(message);
   const hashBuffer = await crypto.subtle.digest("SHA-512", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padLeft(2, "0")).join("");
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 // Helper: Compute HMAC-SHA256 hex digest
@@ -39,7 +40,7 @@ async function hmacSha256Hex(secret: string, message: string): Promise<string> {
   );
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(message));
   const hashArray = Array.from(new Uint8Array(signature));
-  return hashArray.map((b) => b.toString(16).padLeft(2, "0")).join("");
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 serve(async (req: Request) => {
