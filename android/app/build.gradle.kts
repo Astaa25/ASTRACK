@@ -42,18 +42,14 @@ android {
 
     buildTypes {
         release {
-            val releaseSigning = signingConfigs.getByName("release")
-            signingConfig = if (keystorePropertiesFile.exists() && releaseSigning.storeFile?.exists() == true) {
+            val releaseSigning = signingConfigs.findByName("release")
+            signingConfig = if (keystorePropertiesFile.exists() && releaseSigning?.storeFile?.exists() == true) {
                 releaseSigning
             } else {
                 signingConfigs.getByName("debug")
             }
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

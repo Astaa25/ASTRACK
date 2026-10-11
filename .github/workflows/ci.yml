@@ -42,13 +42,15 @@ jobs:
         run: flutter test
 
       - name: Build Android Release APK
-        run: flutter build apk --release
+        run: |
+          flutter config --no-analytics
+          flutter build apk --release
 
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ASTRACK-Release-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/**/*.apk
           if-no-files-found: error
           retention-days: 14
 
