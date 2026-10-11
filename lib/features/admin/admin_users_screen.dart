@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app/theme/app_colors.dart';
+import '../../services/supabase_auth_service.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -135,15 +136,44 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> with SingleTickerPr
     }
   }
 
+  Future<void> _handleSendPasswordReset(Map<String, dynamic> u) async {
+    final email = u['email']?.toString().trim() ?? '';
+    if (email.isEmpty) return;
+    try {
+      await SupabaseAuthService.sendPasswordResetEmail(email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('✓ Tautan reset kata sandi telah dikirim ke $email'),
+          backgroundColor: AppColors.income,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Gagal mengirim email reset: ${e.toString()}'),
+          backgroundColor: AppColors.expense,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    }
+  }
+
   Future<void> _updateUserStatus(String userId, String newStatus, {String? userFullName}) async {
     final oldUser = _users.firstWhere((u) => u['id'] == userId, orElse: () => {});
     final oldStatus = oldUser['status']?.toString();
 
     try {
-      await Supabase.instance.client
-          .from('profiles')
-          .update({'status': newStatus})
-          .eq('id', userId);
+      if (newStatus == 'approved') {
+        await SupabaseAuthService.approveUser(userId);
+      } else {
+        await Supabase.instance.client
+            .from('profiles')
+            .update({'status': newStatus, 'updated_at': DateTime.now().toIso8601String()})
+            .eq('id', userId);
+      }
     } catch (_) {}
 
     setState(() {
@@ -532,6 +562,24 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> with SingleTickerPr
                     ),
                 ],
               ),
+
+              // Actions for approved/active users
+              if (!isPending && !isSuspended && !isRejected) ...[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => _handleSendPasswordReset(u),
+                    icon: const Icon(Icons.lock_reset_rounded, size: 16),
+                    label: const Text('Kirim Reset Sandi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.income,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ),
+              ],
 
               // Actions for pending
               if (isPending) ...[

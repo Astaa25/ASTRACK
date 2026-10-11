@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../app/theme/app_colors.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/supabase_auth_service.dart';
+import '../../data/storage/storage_service.dart';
 
 
 class RegisterScreen extends StatefulWidget {
@@ -56,7 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
   void _handleRegister() async {
     final name = _nameCtrl.text.trim();
-    final email = _emailCtrl.text.trim();
+    final email = _emailCtrl.text.trim().toLowerCase();
     final pass = _passCtrl.text.trim();
     final confirm = _confirmPassCtrl.text.trim();
 
@@ -78,6 +79,16 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     try {
       final response = await SupabaseAuthService.signUp(email, pass, name);
       if (response.user == null) throw Exception('Pendaftaran gagal. Silakan coba lagi.');
+
+      // Sign out immediately so device does not retain an unapproved pending session
+      await SupabaseAuthService.signOut();
+
+      // Save registered credentials to local storage so Login screen can prefill
+      try {
+        final storage = StorageService();
+        await storage.init();
+        await storage.saveRegisteredAccount(email, pass);
+      } catch (_) {}
 
       // Wait for trigger to create profile, though we can assume it's pending
       setState(() {
@@ -188,7 +199,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             children: [
               _fieldLabel('Nama Lengkap', textP),
               const SizedBox(height: 8),
-              _buildField(controller: _nameCtrl, hint: 'Contoh: Asta Abrar', icon: Icons.person_outline_rounded, isDark: isDark, primary: primary),
+              _buildField(controller: _nameCtrl, hint: 'Contoh: Alex Pratama', icon: Icons.person_outline_rounded, isDark: isDark, primary: primary),
               const SizedBox(height: 20),
 
               _fieldLabel('Alamat Email', textP),
@@ -280,7 +291,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                 side: BorderSide(color: primary.withOpacity(0.5)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () async {
+                await SupabaseAuthService.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
               child: const Text('Kembali ke Login', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           )

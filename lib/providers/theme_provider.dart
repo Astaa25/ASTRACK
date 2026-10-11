@@ -9,7 +9,7 @@ class ThemeProvider extends ChangeNotifier {
   final StorageService _storage;
 
   PersonalizationSettings _activeSettings = const PersonalizationSettings(
-    themeMode: ThemeMode.system,
+    themeMode: ThemeMode.light,
     accentColor: AppAccentColor.emerald,
     textScale: AppTextScale.normal,
     uiStyle: AppUiStyle.soft,
@@ -56,9 +56,11 @@ class ThemeProvider extends ChangeNotifier {
   // --- Load & Save ---
   void _loadSettings() {
     final savedModeStr = _storage.getThemeMode();
-    ThemeMode mode = ThemeMode.system;
+    ThemeMode mode = ThemeMode.light;
     if (savedModeStr == 'dark') {
       mode = ThemeMode.dark;
+    } else if (savedModeStr == 'system') {
+      mode = ThemeMode.system;
     } else if (savedModeStr == 'light') {
       mode = ThemeMode.light;
     }

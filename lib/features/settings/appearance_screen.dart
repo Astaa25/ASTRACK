@@ -280,9 +280,9 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     AppLocalizations loc,
   ) {
     final modes = [
-      (ThemeMode.system, loc.themeSystem, Icons.brightness_auto_rounded, loc.themeSystemDesc),
       (ThemeMode.light, loc.themeLight, Icons.light_mode_rounded, loc.themeLightDesc),
       (ThemeMode.dark, loc.themeDark, Icons.dark_mode_rounded, loc.themeDarkDesc),
+      (ThemeMode.system, loc.themeSystem, Icons.brightness_auto_rounded, loc.themeSystemDesc),
     ];
 
     return Container(

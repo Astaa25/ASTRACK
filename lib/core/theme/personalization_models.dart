@@ -239,7 +239,7 @@ class PersonalizationSettings {
   final Locale locale;
 
   const PersonalizationSettings({
-    this.themeMode = ThemeMode.system,
+    this.themeMode = ThemeMode.light,
     this.accentColor = AppAccentColor.emerald,
     this.textScale = AppTextScale.normal,
     this.uiStyle = AppUiStyle.soft,

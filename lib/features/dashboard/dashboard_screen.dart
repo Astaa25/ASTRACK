@@ -34,6 +34,8 @@ import '../recurring/recurring_screen.dart';
 import '../policy/policy_screen.dart';
 import '../../services/saas_backend_service.dart';
 import '../../services/financial_insight_service.dart';
+import '../auth/login_screen.dart';
+import '../../services/supabase_auth_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -1633,9 +1635,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: const Text('Batal', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
+              await SupabaseAuthService.signOut();
               finance.logout();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.expense,

@@ -6,6 +6,7 @@ import '../../providers/theme_provider.dart';
 import '../../providers/finance_provider.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
+import '../../services/supabase_auth_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -155,12 +156,15 @@ class ProfileScreen extends StatelessWidget {
                   side: const BorderSide(color: AppColors.expense),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                onPressed: () {
+                onPressed: () async {
+                  await SupabaseAuthService.signOut();
                   finance.logout();
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    (route) => false,
-                  );
+                  if (context.mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
                 },
                 icon: const Icon(Icons.logout_rounded, size: 18),
                 label: const Text('Keluar dari Akun', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
@@ -302,14 +306,18 @@ class ProfileScreen extends StatelessWidget {
                             if (user != null) {
                               await Supabase.instance.client
                                   .from('profiles')
-                                  .update({'full_name': newName})
+                                  .update({
+                                    'full_name': newName,
+                                    'updated_at': DateTime.now().toIso8601String(),
+                                  })
                                   .eq('id', user.id);
 
-                              if (newPw.isNotEmpty) {
-                                await Supabase.instance.client.auth.updateUser(
-                                  UserAttributes(password: newPw),
-                                );
-                              }
+                              await Supabase.instance.client.auth.updateUser(
+                                UserAttributes(
+                                  data: {'full_name': newName},
+                                  password: newPw.isNotEmpty ? newPw : null,
+                                ),
+                              );
                             }
 
                             finance.updateProfile(

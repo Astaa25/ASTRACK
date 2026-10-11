@@ -110,8 +110,9 @@ class SupabaseAuthService {
           .from('profiles')
           .select('status')
           .eq('id', userId)
-          .single();
-      return data['status'] as String;
+          .maybeSingle();
+      if (data == null || data['status'] == null) return 'pending';
+      return data['status'].toString().trim().toLowerCase();
     } catch (e) {
       return 'pending'; // Safe fallback
     }
@@ -143,10 +144,14 @@ class SupabaseAuthService {
   static Future<void> approveUser(String userId) async {
     final client = _supabase;
     if (client == null) return;
-    await client
-        .from('profiles')
-        .update({'status': 'approved'})
-        .eq('id', userId);
+    try {
+      await client.rpc('admin_approve_user', params: {'target_user_id': userId});
+    } catch (_) {
+      await client
+          .from('profiles')
+          .update({'status': 'approved', 'updated_at': DateTime.now().toIso8601String()})
+          .eq('id', userId);
+    }
   }
 
   static Future<void> rejectUser(String userId) async {

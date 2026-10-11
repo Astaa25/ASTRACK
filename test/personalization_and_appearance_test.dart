@@ -153,7 +153,7 @@ void main() {
 
     test('ThemeProvider loads defaults and handles direct setters', () async {
       final provider = ThemeProvider(storage);
-      expect(provider.themeMode, ThemeMode.system);
+      expect(provider.themeMode, ThemeMode.light);
       expect(provider.accentColor, AppAccentColor.emerald);
       expect(provider.textScale, AppTextScale.normal);
       expect(provider.uiStyle, AppUiStyle.soft);
@@ -198,7 +198,7 @@ void main() {
 
       expect(provider.hasUnsavedChanges, isTrue);
       expect(provider.changeCount, 2);
-      expect(provider.activeSettings.themeMode, ThemeMode.system); // active remains untouched!
+      expect(provider.activeSettings.themeMode, ThemeMode.light); // active remains untouched!
 
       // Discard
       provider.discardStaged();

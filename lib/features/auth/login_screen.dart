@@ -8,6 +8,8 @@ import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../../services/supabase_auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../data/storage/storage_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,6 +35,19 @@ class _LoginScreenState extends State<LoginScreen>
         vsync: this, duration: const Duration(milliseconds: 600));
     _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final storage = StorageService();
+        await storage.init();
+        final regEmail = storage.getRegisteredEmail();
+        if (mounted && regEmail != null && regEmail.isNotEmpty && _emailController.text.isEmpty) {
+          setState(() {
+            _emailController.text = regEmail;
+          });
+        }
+      } catch (_) {}
+    });
   }
 
   @override
@@ -44,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _handleLogin() async {
-    final email = _emailController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty) {
@@ -59,10 +74,6 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
-
-
-
-
 
     try {
       final response = await SupabaseAuthService.signIn(email, password);
@@ -86,10 +97,37 @@ class _LoginScreenState extends State<LoginScreen>
 
       // Sync with FinanceProvider for local state compatibility
       final finance = Provider.of<FinanceProvider>(context, listen: false);
+
+      // Fetch latest name from Supabase profiles table, fallback to userMetadata & local cache
+      String userFullName = '';
+      try {
+        final profileRow = await Supabase.instance.client
+            .from('profiles')
+            .select('full_name')
+            .eq('id', response.user!.id)
+            .maybeSingle();
+        if (profileRow != null && profileRow['full_name'] != null && profileRow['full_name'].toString().trim().isNotEmpty) {
+          userFullName = profileRow['full_name'].toString().trim();
+        }
+      } catch (_) {}
+
+      if (userFullName.isEmpty) {
+        userFullName = response.user?.userMetadata?['full_name']?.toString().trim() ?? '';
+      }
+
+      if (userFullName.isEmpty) {
+        final local = finance.profile;
+        if (local.email.trim().toLowerCase() == email.trim().toLowerCase() && local.name.isNotEmpty && local.name != 'Pengguna Baru') {
+          userFullName = local.name;
+        } else {
+          userFullName = email.split('@').first;
+        }
+      }
+
       finance.login(
         email: email,
         password: password,
-        name: response.user?.userMetadata?['full_name'] ?? email.split('@').first,
+        name: userFullName,
         isAdmin: isAdmin,
       );
 
@@ -101,18 +139,47 @@ class _LoginScreenState extends State<LoginScreen>
               FadeTransition(opacity: animation, child: child),
         ),
       );
+    } on AuthException catch (e) {
+      setState(() => _isLoading = false);
+      final msg = e.message.toLowerCase();
+      if (msg.contains('invalid login credentials') || msg.contains('invalid credentials')) {
+        _showSnack(
+          'Kata sandi salah atau tidak cocok. Silakan periksa kembali atau reset sandi.',
+          actionLabel: 'Lupa Sandi?',
+          onAction: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+            );
+          },
+        );
+      } else if (msg.contains('email not confirmed')) {
+        _showSnack('Email belum dikonfirmasi! Silakan periksa folder masuk atau spam email Anda untuk verifikasi.');
+      } else if (msg.contains('user not found')) {
+        _showSnack('Akun dengan email ini belum terdaftar.');
+      } else {
+        _showSnack(e.message);
+      }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showSnack('Email belum terdaftar atau password salah!');
+      final raw = e.toString().replaceAll('Exception: ', '');
+      _showSnack('Gagal masuk: $raw');
     }
   }
 
-
-  void _showSnack(String msg) {
+  void _showSnack(String msg, {String? actionLabel, VoidCallback? onAction}) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       backgroundColor: AppColors.expense,
       behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 4),
+      action: actionLabel != null && onAction != null
+          ? SnackBarAction(
+              label: actionLabel,
+              textColor: Colors.amberAccent,
+              onPressed: onAction,
+            )
+          : null,
     ));
   }
 

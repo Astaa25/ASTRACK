@@ -13,6 +13,7 @@ import '../services/transaction_service.dart';
 import '../services/notification_service.dart';
 import '../services/financial_sync_service.dart';
 import '../core/utils/import_validator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FinanceProvider extends ChangeNotifier {
   final StorageService _storage;
@@ -60,6 +61,31 @@ class FinanceProvider extends ChangeNotifier {
     _hideBalance = _storage.getHideBalance();
     _processRecurringSchedule();
     notifyListeners();
+    _syncProfileFromCloud();
+  }
+
+  /// Sync user profile full_name from Supabase cloud on refresh
+  Future<void> _syncProfileFromCloud() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null && !_profile.isGuest) {
+        final profileData = await Supabase.instance.client
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .maybeSingle();
+        if (profileData != null && profileData['full_name'] != null) {
+          final cloudName = profileData['full_name'].toString().trim();
+          if (cloudName.isNotEmpty && cloudName != _profile.name) {
+            _profile = _profile.copyWith(name: cloudName);
+            await _storage.saveProfile(_profile);
+            notifyListeners();
+          }
+        }
+      }
+    } catch (_) {
+      // Graceful offline fallback
+    }
   }
 
   void toggleHideBalance() {
@@ -74,12 +100,54 @@ class FinanceProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reset all financial data to fresh slate (Rp 0, 1 clean cash source, 0 transactions)
+  void resetFinancialsToFreshSlate() {
+    _transactions = [];
+    _budgets = [];
+    _savings = [];
+    _recurring = [];
+    _sources = [
+      FundSource(
+        id: 'src_default_cash',
+        name: 'Dompet Utama',
+        balance: 0.0,
+        iconName: 'wallet',
+        colorHex: '10B981',
+        description: 'Dompet kas tunai utama',
+        isDefault: true,
+        createdAt: DateTime.now(),
+      ),
+    ];
+    _storage.saveTransactions(_transactions);
+    _storage.saveBudgets(_budgets);
+    _storage.saveSavings(_savings);
+    _storage.saveRecurring(_recurring);
+    _storage.saveSources(_sources);
+    notifyListeners();
+  }
+
   /// Login user
   bool login({required String email, required String password, String? name, bool isAdmin = false}) {
-    final isDesignatedAdmin = email.trim().toLowerCase() == 'astaabrar@gmail.com';
+    final cleanEmail = email.trim().toLowerCase();
+    final isDesignatedAdmin = cleanEmail == 'astaabrar@gmail.com';
+    final resolvedName = (name != null && name.trim().isNotEmpty)
+        ? name.trim()
+        : (_profile.name.isNotEmpty && _profile.name != 'Pengguna Baru'
+            ? _profile.name
+            : email.split('@').first);
+
+    final isDifferentUser = _profile.email.isNotEmpty &&
+        _profile.email.trim().toLowerCase() != cleanEmail;
+    final isTester = cleanEmail.contains('tester');
+
+    // Clean reset to Rp 0 for tester accounts or when switching between accounts
+    if (isDifferentUser || isTester) {
+      resetFinancialsToFreshSlate();
+    }
+
     _profile = _profile.copyWith(
-      email: email,
-      name: name ?? (email.split('@').first),
+      email: cleanEmail,
+      name: resolvedName,
       isGuest: false,
       isLoggedIn: true,
       hasCompletedOnboarding: true,
@@ -87,6 +155,7 @@ class FinanceProvider extends ChangeNotifier {
     );
     _storage.saveProfile(_profile);
     notifyListeners();
+    _syncProfileFromCloud();
     return true;
   }
 
@@ -151,6 +220,7 @@ class FinanceProvider extends ChangeNotifier {
       isLoggedIn: false,
     );
     _storage.saveProfile(_profile);
+    resetFinancialsToFreshSlate();
     notifyListeners();
   }
 

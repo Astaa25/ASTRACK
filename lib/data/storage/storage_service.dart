@@ -33,7 +33,7 @@ class StorageService {
   }
 
   // --- Theme & Preferences ---
-  String getThemeMode() => _prefs.getString(_keyThemeMode) ?? 'system';
+  String getThemeMode() => _prefs.getString(_keyThemeMode) ?? 'light';
   Future<void> setThemeMode(String mode) async => await _prefs.setString(_keyThemeMode, mode);
 
   String getAccentColor() => _prefs.getString(_keyAccentColor) ?? 'emerald';
